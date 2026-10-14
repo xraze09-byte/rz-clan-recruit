@@ -46,7 +46,7 @@ export function appFromRow(r) {
     id: r.id, ref: r.ref, ign: r.ign, uid: r.uid, level: r.level,
     rankBR: r.rank_br, rankCS: r.rank_cs, track: r.track, tier: r.tier,
     testers: r.testers || [], instagram: r.instagram, messenger: r.messenger,
-    availability: r.availability, note: r.note, status: r.status,
+    availability: r.availability, preferredAt: iso(r.preferred_at), note: r.note, status: r.status,
     slotId: r.slot_id || "", slotStart: iso(r.slot_start), slotCancelled: Boolean(r.slot_cancelled),
     createdAt: iso(r.created_at),
   };
@@ -168,6 +168,7 @@ export function validateApplication(b) {
     instagram: str(b.instagram).trim(),
     messenger: str(b.messenger).trim(),
     availability: str(b.availability),
+    preferredAt: str(b.preferredAt).trim(),
     slotId: str(b.slotId).trim(),
     note: str(b.note).replace(/\r\n?/g, "\n").trim(),
   };
@@ -194,8 +195,16 @@ export function validateApplication(b) {
 
   if (d.slotId) {
     if (!UUID_RE.test(d.slotId)) e.slotId = "รอบทดสอบไม่ถูกต้อง";
+    d.availability = ""; d.preferredAt = "";
+  } else if (d.preferredAt) {
+    // วัน+เวลาที่ผู้สมัครเลือกเอง (ISO จากเบราว์เซอร์ แปลงจากเวลาไทยแล้ว) ต้องล่วงหน้า >= 1 ชม. และไม่เกิน 120 วัน
+    const ms = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,3})?Z$/.test(d.preferredAt) ? Date.parse(d.preferredAt) : NaN;
+    if (!Number.isFinite(ms)) e.availability = "วันหรือเวลาไม่ถูกต้อง";
+    else if (ms < Date.now() + 60 * 60000 - 60000) e.availability = "ต้องเลือกเวลาล่วงหน้าอย่างน้อย 1 ชั่วโมง (ตามเวลาไทย)";
+    else if (ms > Date.now() + 120 * 86400000) e.availability = "เลือกล่วงหน้าได้ไม่เกิน 120 วัน";
+    else d.preferredAt = new Date(ms).toISOString();
     d.availability = "";
-  } else if (!has(AVAIL, d.availability)) e.availability = "เลือกรอบทดสอบหรือช่วงเวลาที่สะดวก";
+  } else if (!has(AVAIL, d.availability)) e.availability = "เลือกรอบทดสอบหรือวันและเวลาที่สะดวก";
   if (d.note.length > 300) e.note = "หมายเหตุไม่เกิน 300 ตัวอักษร";
   else if (CTRL_NL.test(d.note) || INVISIBLE.test(d.note)) e.note = "มีอักขระที่ไม่อนุญาต";
 

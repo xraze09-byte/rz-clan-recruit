@@ -193,7 +193,7 @@ label{display:block;margin-bottom:6px;font-weight:700}
         el("td", {}, TRACK[it.track] || it.track, el("br"), el("strong", {}, it.tier)),
         el("td", {}, (it.testers || []).join(", ")),
         el("td", {}, contactNode("Instagram", it.instagram, "ig"), it.instagram && it.messenger ? el("br") : "", contactNode("Messenger", it.messenger, "msg")),
-        el("td", {}, it.slotStart ? el("strong", {}, fmtSlot(it.slotStart)) : it.slotCancelled ? "รอบที่จองถูกยกเลิก (รอนัดใหม่)" : AVAIL[it.availability] || "-"),
+        el("td", {}, it.slotStart ? el("strong", {}, fmtSlot(it.slotStart)) : it.slotCancelled ? "รอบที่จองถูกยกเลิก (รอนัดใหม่)" : it.preferredAt ? fmtSlot(it.preferredAt) : AVAIL[it.availability] || "-"),
         el("td", { class: "note" }, it.note || "-"),
         el("td", {}, sel),
         el("td", {}, del),
@@ -298,7 +298,7 @@ label{display:block;margin-bottom:6px;font-weight:700}
     return items.map((it) => [
       it.ref, new Date(it.createdAt).toLocaleString("th-TH"), it.ign, it.uid, it.level, it.rankBR, it.rankCS,
       TRACK[it.track] || it.track, it.tier, (it.testers || []).join(", "), it.instagram, it.messenger,
-      AVAIL[it.availability] || "", it.slotStart ? fmtSlot(it.slotStart) : "", it.note, STATUS[it.status] || it.status,
+      (it.preferredAt ? fmtSlot(it.preferredAt) : AVAIL[it.availability] || ""), it.slotStart ? fmtSlot(it.slotStart) : "", it.note, STATUS[it.status] || it.status,
     ]);
   }
   const xmlEsc = (s) => String(s ?? "").replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -359,7 +359,7 @@ label{display:block;margin-bottom:6px;font-weight:700}
     const lines = items.map((it) => [
       it.ref, new Date(it.createdAt).toLocaleString("th-TH"), it.ign, it.uid, it.level, it.rankBR, it.rankCS,
       TRACK[it.track] || it.track, it.tier, (it.testers || []).join(", "), it.instagram, it.messenger,
-      AVAIL[it.availability] || "", it.slotStart ? fmtSlot(it.slotStart) : "", it.note, STATUS[it.status] || it.status,
+      (it.preferredAt ? fmtSlot(it.preferredAt) : AVAIL[it.availability] || ""), it.slotStart ? fmtSlot(it.slotStart) : "", it.note, STATUS[it.status] || it.status,
     ].map(cell).join(","));
     const blob = new Blob(["\uFEFF" + [head.map(cell).join(","), ...lines].join("\r\n")], { type: "text/csv;charset=utf-8" });
     const a = el("a", { href: URL.createObjectURL(blob), download: `rz-applications-${new Date().toISOString().slice(0, 10)}.csv` });

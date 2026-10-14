@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS applications (
   instagram     text        NOT NULL DEFAULT '',   -- ชื่อหรือลิงก์ Instagram
   messenger     text        NOT NULL DEFAULT '',   -- ชื่อหรือลิงก์ Facebook Messenger
   availability  text        NOT NULL DEFAULT '',
+  preferred_at  timestamptz,                        -- วัน+เวลาที่ผู้สมัครเลือกเอง (เวลาจริง เก็บเป็น UTC แสดงเป็นเวลาไทย)
   note          text        NOT NULL DEFAULT '',
   status        text        NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'testing', 'approved', 'rejected')),
   -- รอบที่จอง: ON DELETE SET NULL = ลบรอบแล้วใบสมัครไม่หาย
@@ -47,3 +48,6 @@ BEGIN
     ALTER TABLE applications RENAME COLUMN line TO messenger;
   END IF;
 END $$;
+
+-- ฐานข้อมูลเดิม: เพิ่มคอลัมน์วัน+เวลาที่สะดวก
+ALTER TABLE applications ADD COLUMN IF NOT EXISTS preferred_at timestamptz;

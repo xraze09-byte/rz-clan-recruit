@@ -22,6 +22,7 @@ export const SCHEMA = [
     instagram     text        NOT NULL DEFAULT '',
     messenger     text        NOT NULL DEFAULT '',
     availability  text        NOT NULL DEFAULT '',
+    preferred_at  timestamptz,
     note          text        NOT NULL DEFAULT '',
     status        text        NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'testing', 'approved', 'rejected')),
     slot_id       uuid        REFERENCES slots(id) ON DELETE SET NULL,
@@ -37,6 +38,7 @@ export const SCHEMA = [
       ALTER TABLE applications RENAME COLUMN line TO messenger;
     END IF;
   END $$`,
+  `ALTER TABLE applications ADD COLUMN IF NOT EXISTS preferred_at timestamptz`,
   `CREATE INDEX IF NOT EXISTS applications_created_idx ON applications (created_at DESC)`,
   `CREATE INDEX IF NOT EXISTS applications_status_idx  ON applications (status)`,
   `CREATE INDEX IF NOT EXISTS applications_slot_idx    ON applications (slot_id) WHERE slot_id IS NOT NULL`,

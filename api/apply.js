@@ -64,10 +64,10 @@ export default async function handler(req, res) {
         sql`SELECT id FROM slots WHERE id = ${slotId}::uuid FOR UPDATE`,
         sql`
           INSERT INTO applications
-            (id, ref, ign, uid, level, rank_br, rank_cs, track, tier, testers, instagram, messenger, availability, note, slot_id)
+            (id, ref, ign, uid, level, rank_br, rank_cs, track, tier, testers, instagram, messenger, availability, preferred_at, note, slot_id)
           SELECT ${id}::uuid, ${ref}, ${data.ign}, ${data.uid}, ${data.level}, ${data.rankBR}, ${data.rankCS},
                  ${data.track}, ${data.tier}, ${testers}::text[], ${data.instagram}, ${data.messenger}, ${data.availability},
-                 ${data.note}, ${slotId}::uuid
+                 ${data.preferredAt || null}::timestamptz, ${data.note}, ${slotId}::uuid
           WHERE ${slotId}::uuid IS NULL
              OR EXISTS (
                SELECT 1 FROM slots s

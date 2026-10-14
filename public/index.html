@@ -231,14 +231,12 @@ a{color:inherit}
               <button type="button" class="slot-fallback" id="slot-fallback">ไม่มีรอบที่สะดวก? ระบุช่วงเวลาที่สะดวกแทน</button>
             </fieldset>
             <div class="field" id="avail-field">
-              <label class="label" for="f-availability">ช่วงเวลาที่สะดวกทดสอบ <span class="req">*</span></label>
-              <select class="select" id="f-availability" name="availability">
-                <option value="">— เลือกช่วงเวลา —</option>
-                <option value="weekday_evening">วันธรรมดา ช่วงเย็น</option>
-                <option value="weekday_night">วันธรรมดา ช่วงดึก</option>
-                <option value="weekend">เสาร์–อาทิตย์</option>
-                <option value="anytime">ได้ทุกช่วงเวลา</option>
-              </select>
+              <label class="label" for="f-prefDate">วันและเวลาที่สะดวกทดสอบ <span class="req">*</span></label>
+              <p class="slot-note">เวลาตามเขตประเทศไทย (GMT+7) • เลือกได้ตั้งแต่ 1 ชั่วโมงข้างหน้า</p>
+              <div style="display:flex;gap:10px;flex-wrap:wrap">
+                <input class="input" type="date" id="f-prefDate" name="prefDate" style="flex:1 1 160px">
+                <input class="input" type="time" id="f-prefTime" name="prefTime" step="900" style="flex:1 1 120px">
+              </div>
               <p class="err" id="e-availability" hidden></p>
               <button type="button" class="slot-fallback" id="slot-back" hidden>กลับไปเลือกรอบทดสอบ</button>
             </div>
@@ -311,7 +309,7 @@ a{color:inherit}
   const STEP_FIELDS = [
     ["ign", "uid", "level"],
     ["rankBR", "rankCS", "track", "tier"],
-    ["instagram", "messenger", "slotId", "availability", "note", "consent"],
+    ["instagram", "messenger", "slotId", "prefDate", "prefTime", "availability", "note", "consent"],
   ];
   const ALL_FIELDS = STEP_FIELDS.flat();
   // Instagram: @ชื่อ / ชื่อ (a-z 0-9 _ .) หรือลิงก์ instagram.com/ชื่อ
@@ -356,7 +354,16 @@ a{color:inherit}
     tier: (v) => (TIERS.includes(v) ? "" : "เลือกระดับความยาก"),
     instagram: (v) => (v.trim() === "" || IG_RE.test(v.trim()) ? "" : "Instagram ไม่ถูกต้อง ใส่ชื่อ เช่น @rz_player หรือลิงก์ instagram.com/..."),
     messenger: (v) => (v.trim() === "" || MSG_RE.test(v.trim()) ? "" : "Messenger ไม่ถูกต้อง ใส่ลิงก์ facebook.com/... หรือ m.me/... หรือชื่อบัญชี"),
-    availability: (v) => (slotMode || has(AVAIL, v) ? "" : "เลือกช่วงเวลาที่สะดวกทดสอบ"),
+    availability: () => {
+      if (slotMode) return "";
+      const iso = prefIso();
+      if (!$("#f-prefDate").value || !$("#f-prefTime").value) return "เลือกวันและเวลาที่สะดวกทดสอบ";
+      if (!iso) return "วันหรือเวลาไม่ถูกต้อง";
+      const t = Date.parse(iso), now = Date.now();
+      if (t < now + 60 * 60000) return "ต้องเลือกเวลาล่วงหน้าอย่างน้อย 1 ชั่วโมง (ตามเวลาไทย)";
+      if (t > now + 120 * 86400000) return "เลือกล่วงหน้าได้ไม่เกิน 120 วัน";
+      return "";
+    },
     slotId: (v) => (!slotMode || (UUID_RE.test(v) && slots.some((s) => s.id === v)) ? "" : "เลือกรอบทดสอบ 1 รอบ"),
     note(v) {
       if (v.trim().length > 300) return "หมายเหตุไม่เกิน 300 ตัวอักษร";
@@ -389,10 +396,20 @@ a{color:inherit}
   let step = 0;
   let submitting = false;
   let slots = [];        // รอบทดสอบที่ว่าง (โหลดจาก /api/slots)
+  /** วัน+เวลาที่ผู้สมัครกรอก ถือเป็นเวลาไทย (UTC+7) เสมอ ไม่ขึ้นกับเขตเวลาเครื่อง */
+  function prefIso() {
+    const d = $("#f-prefDate").value, t = $("#f-prefTime").value;
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(d) || !/^\d{2}:\d{2}$/.test(t)) return "";
+    const ms = Date.parse(`${d}T${t}:00+07:00`);
+    return Number.isFinite(ms) ? new Date(ms).toISOString() : "";
+  }
+  /** วันที่ปัจจุบันตามเวลาไทย (YYYY-MM-DD) ใช้เป็นค่า min ของช่องวันที่ */
+  const bkkToday = () => new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Bangkok" }).format(new Date());
   let slotMode = false;  // true = ให้เลือกรอบ, false = ใช้ช่วงเวลาที่สะดวกแบบเดิม
   let slotId = "";
 
   if (DEMO) $("#demo-note").hidden = false;
+  $("#f-prefDate").min = bkkToday();
 
   function readForm() {
     const val = (n) => {
@@ -402,7 +419,7 @@ a{color:inherit}
     return {
       ign: val("ign"), uid: val("uid"), level: val("level"),
       rankBR: val("rankBR"), rankCS: val("rankCS"), track: val("track"), tier: val("tier"),
-      instagram: val("instagram"), messenger: val("messenger"), availability: slotMode ? "" : val("availability"), slotId: slotMode ? slotId : "", note: val("note"),
+      instagram: val("instagram"), messenger: val("messenger"), availability: "", preferredAt: slotMode ? "" : prefIso(), slotId: slotMode ? slotId : "", note: val("note"),
       consent: $("#f-consent").checked,
     };
   }
@@ -464,7 +481,7 @@ a{color:inherit}
     $("#sum-track").textContent = `${TRACK_LABEL[d.track] || "-"} • ${d.tier || "-"}`;
     $("#sum-testers").textContent = testers;
     const sl = slotMode ? slots.find((x) => x.id === d.slotId) : null;
-    $("#sum-avail").textContent = sl ? fmtSlot(sl.start) : has(AVAIL, d.availability) ? AVAIL[d.availability] : "-";
+    $("#sum-avail").textContent = sl ? fmtSlot(sl.start) : d.preferredAt ? fmtSlot(d.preferredAt) : "-";
   }
 
   /* ========== บันทึกร่าง (sessionStorage หายเมื่อปิดแท็บ) ========== */
@@ -717,6 +734,7 @@ a{color:inherit}
     const k = t.name;
     if (!k || k === "website") return;
     if (k === "uid" || k === "level") { const v = t.value.replace(/\D/g, ""); if (v !== t.value) t.value = v; }
+    if (k === "prefDate" || k === "prefTime") setError("availability", "");
     if (k === "note") $("#h-note").textContent = `${t.value.length}/300`;
     setError(k, "");
     if (k === "instagram" || k === "messenger") { setError("instagram", ""); setError("messenger", ""); }
