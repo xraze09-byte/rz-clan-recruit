@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>RZ CLAN · Admin</title>
+<style>
+@font-face{font-family:"Kanit";font-weight:400;src:url(fonts/kanit-400.ttf) format("truetype");font-display:swap}
+@font-face{font-family:"Kanit";font-weight:700;src:url(fonts/kanit-700.ttf) format("truetype");font-display:swap}
+@font-face{font-family:"Kanit";font-weight:800;src:url(fonts/kanit-800.ttf) format("truetype");font-display:swap}
+@font-face{font-family:"Kanit";font-weight:900;src:url(fonts/kanit-900.ttf) format("truetype");font-display:swap}
+:root{--red:#e10600;--red-hot:#ff2a2a;--muted:#a8a8a8}
+*,*::before,*::after{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:#000;color:#fff;font-family:"Kanit",system-ui,sans-serif}
+.admin{max-width:1280px;margin:0 auto;padding:24px 14px 60px}
+.card{max-width:420px;margin:60px auto;padding:24px 20px;border-radius:16px;background:linear-gradient(180deg,#140000,#050505 40%);border:1px solid rgba(255,40,40,.35)}
+h1{margin:0 0 12px;font-size:26px;font-weight:900;line-height:1.35}
+label{display:block;margin-bottom:6px;font-weight:700}
+.input,.select{width:100%;font:inherit;font-size:16px;color:#fff;background:#0d0d0d;border:1.5px solid #333;border-radius:10px;padding:10px 12px}
+.select option{background:#111}
+.input:focus-visible,.select:focus-visible{outline:none;border-color:var(--red-hot)}
+.btn{min-height:44px;padding:8px 16px;font:inherit;font-size:15px;font-weight:800;border-radius:10px;border:0;cursor:pointer;color:#fff}
+.btn-primary{width:100%;margin-top:16px;background:linear-gradient(180deg,#ff2a2a,#b00000)}
+.btn-ghost{background:transparent;border:1.5px solid #444}
+.btn-sm{min-height:34px;padding:4px 12px;font-size:14px}
+.btn:disabled{opacity:.6;cursor:not-allowed}
+.err{color:#ff6b6b;margin:8px 0 0}
+.alert{margin-bottom:14px;padding:10px 14px;border:1px solid #ff4d4d;border-radius:10px;color:#ffb3b3;background:rgba(255,0,0,.08)}
+.bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+.actions{display:flex;flex-wrap:wrap;gap:8px}
+.filters{display:grid;grid-template-columns:1fr 240px;gap:10px;margin-bottom:14px}
+.tbl-wrap{overflow-x:auto;border:1px solid #222;border-radius:12px}
+.tbl{width:100%;border-collapse:collapse;font-size:14px;min-width:1100px}
+.tbl th,.tbl td{padding:10px;border-bottom:1px solid #1f1f1f;text-align:left;vertical-align:top;line-height:1.5}
+.tbl th{background:#120000;color:var(--red-hot);position:sticky;top:0}
+.tbl small{color:var(--muted)}
+.note{max-width:220px;white-space:pre-wrap;word-break:break-word}
+.empty{text-align:center;color:var(--muted);padding:30px}
+.slots-box{margin:0 0 18px;padding:14px;border:1px solid #222;border-radius:12px;background:#0a0a0a}
+.slots-box h2{margin:0 0 10px;font-size:18px;font-weight:800}
+.slot-form{display:grid;grid-template-columns:1fr 1fr 90px 1fr auto;gap:8px;align-items:end}
+.slot-form label{font-size:13px;margin-bottom:4px;color:var(--muted)}
+.slot-bulk{margin-top:10px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:14px}
+.slot-bulk .input{width:auto}
+.slot-list{margin-top:12px;display:grid;gap:6px}
+.slot-row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;padding:8px 10px;border:1px solid #222;border-radius:8px;font-size:14px}
+.slot-row.full{border-color:#7a0000}
+.ok-msg{margin:8px 0 0;color:#8fe39b;font-size:14px}
+@media (max-width:800px){.slot-form{grid-template-columns:1fr 1fr}}
+@media (max-width:600px){.filters{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<main class="admin">
+  <form id="login" class="card" autocomplete="off">
+    <h1>RZ CLAN · แอดมิน</h1>
+    <label for="pw">รหัสผ่านแอดมิน</label>
+    <input id="pw" type="password" class="input" autocomplete="current-password" required>
+    <p id="login-err" class="err" role="alert" hidden></p>
+    <button id="login-btn" class="btn btn-primary">เข้าสู่ระบบ</button>
+  </form>
+
+  <section id="panel" hidden>
+    <div class="bar">
+      <h1>ใบสมัครทั้งหมด (<span id="count">0</span>)</h1>
+      <div class="actions">
+        <button id="refresh" type="button" class="btn btn-ghost">รีเฟรช</button>
+        <button id="xlsx" type="button" class="btn btn-ghost">ส่งออก Excel (.xlsx)</button>
+        <button id="csv" type="button" class="btn btn-ghost">ส่งออก CSV</button>
+        <button id="logout" type="button" class="btn btn-ghost">ออกจากระบบ</button>
+      </div>
+    </div>
+    <div class="slots-box">
+      <h2>รอบทดสอบ (เวลาไทย GMT+7)</h2>
+      <form id="slot-form" class="slot-form" autocomplete="off">
+        <div><label for="sl-date">วันที่</label><input id="sl-date" type="date" class="input" required></div>
+        <div><label for="sl-time">เวลา</label><input id="sl-time" type="time" class="input" required></div>
+        <div><label for="sl-cap">ที่นั่ง</label><input id="sl-cap" type="number" class="input" min="1" max="10" value="1" required></div>
+        <div><label for="sl-label">ป้ายชื่อ (ไม่บังคับ)</label><input id="sl-label" class="input" maxlength="60" placeholder="เช่น ทดสอบกับฟลุ๊ค"></div>
+        <button class="btn btn-ghost" type="submit">เพิ่มรอบ</button>
+      </form>
+      <div class="slot-bulk">
+        <span>เพิ่มหลายรอบ:</span>
+        <input id="bk-date" type="date" class="input" aria-label="วันที่">
+        <input id="bk-from" type="time" class="input" value="19:00" aria-label="เริ่ม">
+        <input id="bk-to" type="time" class="input" value="22:00" aria-label="ถึง">
+        <select id="bk-step" class="select" style="width:auto" aria-label="ความยาวต่อรอบ"><option value="30">ทุก 30 นาที</option><option value="60" selected>ทุก 60 นาที</option><option value="90">ทุก 90 นาที</option></select>
+        <button id="bk-add" type="button" class="btn btn-ghost">สร้างรอบ</button>
+      </div>
+      <p id="slot-msg" class="ok-msg" role="status" hidden></p>
+      <div id="slot-list" class="slot-list"></div>
+    </div>
+    <div class="filters">
+      <input id="q" class="input" placeholder="ค้นหาชื่อ / UID / รหัสอ้างอิง">
+      <select id="filter" class="select" aria-label="กรองสถานะ"></select>
+    </div>
+    <div id="msg" class="alert" role="alert" hidden></div>
+    <div class="tbl-wrap">
+      <table class="tbl">
+        <thead>
+          <tr><th>วันที่ / รหัส</th><th>ผู้เล่น</th><th>แรงค์</th><th>สาย / ระดับ</th><th>ผู้ทดสอบ</th><th>ติดต่อ</th><th>รอบทดสอบ / เวลาสะดวก</th><th>หมายเหตุ</th><th>สถานะ</th><th></th></tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+<script>
+(() => {
+  "use strict";
+  const STATUS = { pending: "รอตรวจ", testing: "นัดทดสอบแล้ว", approved: "ผ่าน", rejected: "ไม่ผ่าน" };
+  const TRACK = { LEAGUE: "TIER LEAGUE", HIGHLIGHTS: "TIER HIGHLIGHTS" };
+  const AVAIL = { weekday_evening: "วันธรรมดา ช่วงเย็น", weekday_night: "วันธรรมดา ช่วงดึก", weekend: "เสาร์–อาทิตย์", anytime: "ได้ทุกช่วงเวลา" };
+  const IDLE_MS = 30 * 60 * 1000;
+  const $ = (s) => document.querySelector(s);
+
+  let pw = "";        // เก็บในหน่วยความจำเท่านั้น ไม่ลง localStorage
+  let items = [];
+  let idleTimer;
+
+  /** สร้าง element แบบปลอดภัย: ข้อความทั้งหมดเป็น text node เสมอ (กัน XSS) */
+  function el(tag, props = {}, ...kids) {
+    const n = document.createElement(tag);
+    for (const [k, v] of Object.entries(props)) {
+      if (k === "class") n.className = v;
+      else if (k.startsWith("on")) n.addEventListener(k.slice(2), v);
+      else n.setAttribute(k, v);
+    }
+    for (const c of kids.flat()) if (c != null && c !== false && c !== "") n.append(c instanceof Node ? c : String(c));
+    return n;
+  }
+
+  async function api(method, body, path = "/api/admin") {
+    const headers = { Authorization: "Bearer " + pw };
+    if (body) headers["Content-Type"] = "application/json";
+    const res = await fetch(path, { method, headers, body: body ? JSON.stringify(body) : undefined, cache: "no-store" });
+    const data = await res.json().catch(() => ({}));
+    return { ok: res.ok, status: res.status, data };
+  }
+
+  const showMsg = (m) => { $("#msg").textContent = m; $("#msg").hidden = !m; };
+
+  async function load() {
+    try {
+      const r = await api("GET");
+      if (!r.ok) return { ok: false, status: r.status, error: r.data.error || "โหลดไม่สำเร็จ" };
+      items = Array.isArray(r.data.items) ? r.data.items : [];
+      render();
+      return { ok: true };
+    } catch (_) {
+      return { ok: false, error: "เชื่อมต่อไม่ได้" };
+    }
+  }
+
+  function render() {
+    const q = $("#q").value.trim().toLowerCase();
+    const f = $("#filter").value || "all";
+    const prev = f;
+    $("#filter").replaceChildren(
+      el("option", { value: "all" }, `ทุกสถานะ (${items.length})`),
+      ...Object.entries(STATUS).map(([k, v]) => el("option", { value: k }, `${v} (${items.filter((i) => i.status === k).length})`)),
+    );
+    $("#filter").value = prev;
+    $("#count").textContent = String(items.length);
+
+    const view = items.filter((it) =>
+      (f === "all" || it.status === f) &&
+      (q === "" || String(it.ign).toLowerCase().includes(q) || String(it.uid).includes(q) || String(it.ref).toLowerCase().includes(q)));
+
+    const rows = view.map((it) => {
+      const sel = el("select", { class: "select", "aria-label": "สถานะ" },
+        Object.entries(STATUS).map(([k, v]) => el("option", { value: k }, v)));
+      sel.value = it.status;
+      sel.addEventListener("change", () => {
+        const status = sel.value;
+        mutate("PATCH", { id: it.id, status }, (l) => l.map((x) => (x.id === it.id ? { ...x, status } : x)));
+      });
+      const del = el("button", {
+        class: "btn btn-ghost btn-sm", type: "button",
+        onclick: () => {
+          if (confirm(`ลบใบสมัครของ ${it.ign}? (UID นี้จะสมัครใหม่ได้)`)) {
+            mutate("DELETE", { id: it.id }, (l) => l.filter((x) => x.id !== it.id));
+          }
+        },
+      }, "ลบ");
+      return el("tr", {},
+        el("td", {}, new Date(it.createdAt).toLocaleString("th-TH"), el("br"), el("small", {}, it.ref)),
+        el("td", {}, el("strong", {}, it.ign), el("br"), el("small", {}, `UID ${it.uid} • Lv ${it.level}`)),
+        el("td", {}, `BR ${it.rankBR}`, el("br"), `CS ${it.rankCS}`),
+        el("td", {}, TRACK[it.track] || it.track, el("br"), el("strong", {}, it.tier)),
+        el("td", {}, (it.testers || []).join(", ")),
+        el("td", {}, contactNode("Instagram", it.instagram, "ig"), it.instagram && it.messenger ? el("br") : "", contactNode("Messenger", it.messenger, "msg")),
+        el("td", {}, it.slotStart ? el("strong", {}, fmtSlot(it.slotStart)) : it.slotCancelled ? "รอบที่จองถูกยกเลิก (รอนัดใหม่)" : AVAIL[it.availability] || "-"),
+        el("td", { class: "note" }, it.note || "-"),
+        el("td", {}, sel),
+        el("td", {}, del),
+      );
+    });
+    $("#rows").replaceChildren(...(rows.length ? rows : [el("tr", {}, el("td", { colspan: "10", class: "empty" }, "ไม่มีข้อมูล"))]));
+  }
+
+  async function mutate(method, body, apply) {
+    const prev = items;
+    items = apply(items);
+    render();
+    showMsg("");
+    try {
+      const r = await api(method, body);
+      if (r.status === 401) return logout();
+      if (!r.ok) throw new Error(r.data.error || "บันทึกไม่สำเร็จ");
+    } catch (e) {
+      items = prev;
+      render();
+      showMsg(e.message || "บันทึกไม่สำเร็จ กรุณาลองใหม่");
+    }
+  }
+
+  /* ========== รอบทดสอบ ========== */
+  const fmtFull = new Intl.DateTimeFormat("th-TH", { timeZone: "Asia/Bangkok", dateStyle: "full", timeStyle: "short" });
+  function fmtSlot(iso) { return fmtFull.format(new Date(iso)) + " น."; }
+  let slots = [];
+
+  /** วันที่+เวลา ที่แอดมินกรอก ถือเป็นเวลาไทยเสมอ (UTC+7) ไม่ขึ้นกับเขตเวลาของเครื่อง */
+  const bkkToIso = (date, time) => new Date(`${date}T${time}:00+07:00`).toISOString();
+  const showSlotMsg = (m, bad) => { const e = $("#slot-msg"); e.textContent = m; e.hidden = !m; e.style.color = bad ? "#ff8a8a" : ""; };
+
+  async function loadSlots() {
+    const r = await api("GET", null, "/api/slots");
+    if (r.status === 401) return logout();
+    slots = r.ok && Array.isArray(r.data.slots) ? r.data.slots : [];
+    renderSlots();
+  }
+
+  function renderSlots() {
+    const rows = slots.map((s) => el("div", { class: "slot-row" + (s.booked >= s.capacity ? " full" : "") },
+      el("span", {}, el("strong", {}, fmtSlot(s.start)), s.label ? ` • ${s.label}` : ""),
+      el("span", {}, `จองแล้ว ${s.booked}/${s.capacity}`),
+      el("button", {
+        class: "btn btn-ghost btn-sm", type: "button",
+        onclick: async () => {
+          const warn = s.booked ? `\nมีผู้จองอยู่ ${s.booked} คน (ใบสมัครจะถูกทำเครื่องหมาย "รอนัดใหม่")` : "";
+          if (!confirm(`ลบรอบ ${fmtSlot(s.start)}?${warn}`)) return;
+          const r = await api("DELETE", { id: s.id }, "/api/slots");
+          if (r.status === 401) return logout();
+          if (!r.ok) return showSlotMsg(r.data.error || "ลบไม่สำเร็จ", true);
+          showSlotMsg("ลบรอบแล้ว");
+          await Promise.all([loadSlots(), load()]);
+        },
+      }, "ลบรอบ")));
+    $("#slot-list").replaceChildren(...(rows.length ? rows : [el("p", { class: "empty" }, "ยังไม่มีรอบทดสอบ ผู้สมัครจะเห็นช่องเลือกช่วงเวลาแบบเดิมแทน")]));
+  }
+
+  async function addSlots(list) {
+    showSlotMsg("");
+    const r = await api("POST", { slots: list }, "/api/slots");
+    if (r.status === 401) return logout();
+    if (!r.ok) return showSlotMsg(r.data.error || "เพิ่มไม่สำเร็จ", true);
+    const sk = r.data.skipped || [];
+    showSlotMsg(`เพิ่ม ${r.data.created} รอบ` + (sk.length ? ` • ข้าม ${sk.length} รอบ (${[...new Set(sk)].join(", ")})` : ""), r.data.created === 0);
+    await loadSlots();
+  }
+
+  $("#slot-form").addEventListener("submit", (e) => {
+    e.preventDefault();
+    addSlots([{ start: bkkToIso($("#sl-date").value, $("#sl-time").value), capacity: Number($("#sl-cap").value), label: $("#sl-label").value }]);
+  });
+
+  $("#bk-add").addEventListener("click", () => {
+    const d = $("#bk-date").value, from = $("#bk-from").value, to = $("#bk-to").value, step = Number($("#bk-step").value);
+    if (!d || !from || !to) return showSlotMsg("กรอกวันที่และช่วงเวลาให้ครบ", true);
+    const start = Date.parse(`${d}T${from}:00+07:00`), end = Date.parse(`${d}T${to}:00+07:00`);
+    if (!(end > start)) return showSlotMsg("เวลาสิ้นสุดต้องหลังเวลาเริ่ม", true);
+    const list = [];
+    for (let t = start; t < end && list.length < 60; t += step * 60000) list.push({ start: new Date(t).toISOString(), capacity: Number($("#sl-cap").value) || 1, label: "" });
+    addSlots(list);
+  });
+
+  /** แสดงช่องทางติดต่อ: ถ้าเป็นลิงก์ https ให้กดได้ (เฉพาะโดเมน instagram/facebook/m.me) ไม่งั้นแสดงเป็นข้อความ */
+  function contactNode(label, v, kind) {
+    if (!v) return "";
+    let url = "";
+    const t = v.trim();
+    if (/^(https?:\/\/)?(www\.|m\.|web\.)?(instagram\.com|instagr\.am|facebook\.com|fb\.com|fb\.me|m\.me|messenger\.com)\//i.test(t)) {
+      url = /^https?:\/\//i.test(t) ? t : "https://" + t;
+    } else if (kind === "ig" && /^@?[A-Za-z0-9._]{1,30}$/.test(t)) {
+      url = "https://instagram.com/" + t.replace(/^@/, "");
+    }
+    if (!url) return `${label}: ${t}`;
+    return el("span", {}, `${label}: `, el("a", { href: url, target: "_blank", rel: "noopener noreferrer", style: "color:#ff8a8a" }, t));
+  }
+
+  /* ===== ส่งออก Excel (.xlsx) จริง สร้างในเบราว์เซอร์ ไม่ต้องพึ่งไลบรารี (ZIP แบบ store + XML) ===== */
+  const XL_HEAD = ["รหัส", "วันที่", "ชื่อในเกม", "UID", "เลเวล", "แรงค์ BR", "แรงค์ CS", "สาย", "ระดับ", "ผู้ทดสอบ", "Instagram", "Messenger", "เวลาสะดวก", "รอบทดสอบ", "หมายเหตุ", "สถานะ"];
+  function xlRows() {
+    return items.map((it) => [
+      it.ref, new Date(it.createdAt).toLocaleString("th-TH"), it.ign, it.uid, it.level, it.rankBR, it.rankCS,
+      TRACK[it.track] || it.track, it.tier, (it.testers || []).join(", "), it.instagram, it.messenger,
+      AVAIL[it.availability] || "", it.slotStart ? fmtSlot(it.slotStart) : "", it.note, STATUS[it.status] || it.status,
+    ]);
+  }
+  const xmlEsc = (s) => String(s ?? "").replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  const colName = (i) => String.fromCharCode(65 + i);
+  const CRC_T = (() => { const t = []; for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+  const crc32 = (b) => { let c = 0xFFFFFFFF; for (let i = 0; i < b.length; i++) c = CRC_T[(c ^ b[i]) & 255] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; };
+  function zipStore(files) {
+    const enc = new TextEncoder();
+    const parts = [], central = [];
+    let offset = 0;
+    for (const [name, text] of files) {
+      const nb = enc.encode(name), data = enc.encode(text), crc = crc32(data);
+      const lh = new DataView(new ArrayBuffer(30));
+      lh.setUint32(0, 0x04034b50, true); lh.setUint16(4, 20, true); lh.setUint16(6, 0x0800, true);
+      lh.setUint32(14, crc, true); lh.setUint32(18, data.length, true); lh.setUint32(22, data.length, true); lh.setUint16(26, nb.length, true);
+      parts.push(lh.buffer, nb, data);
+      const ch = new DataView(new ArrayBuffer(46));
+      ch.setUint32(0, 0x02014b50, true); ch.setUint16(4, 20, true); ch.setUint16(6, 20, true); ch.setUint16(8, 0x0800, true);
+      ch.setUint32(16, crc, true); ch.setUint32(20, data.length, true); ch.setUint32(24, data.length, true); ch.setUint16(28, nb.length, true); ch.setUint32(42, offset, true);
+      central.push(ch.buffer, nb);
+      offset += 30 + nb.length + data.length;
+    }
+    const csize = central.reduce((n, b) => n + (b.byteLength ?? b.length), 0);
+    const end = new DataView(new ArrayBuffer(22));
+    end.setUint32(0, 0x06054b50, true); end.setUint16(8, files.length, true); end.setUint16(10, files.length, true); end.setUint32(12, csize, true); end.setUint32(16, offset, true);
+    return new Blob([...parts, ...central, end.buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+  }
+  function exportXlsx() {
+    const rows = [XL_HEAD, ...xlRows()];
+    const sheetRows = rows.map((r, ri) => `<row r="${ri + 1}">` + r.map((v, ci) => {
+      const ref = colName(ci) + (ri + 1);
+      // ทุกเซลล์เป็นข้อความ (inlineStr) → Excel ไม่ตีความเป็นสูตร และ UID ไม่ถูกตัดเลขศูนย์/แปลงเป็น 1E+10
+      return `<c r="${ref}" t="inlineStr"${ri === 0 ? ' s="1"' : ""}><is><t xml:space="preserve">${xmlEsc(v)}</t></is></c>`;
+    }).join("") + "</row>").join("");
+    const widths = [14, 20, 18, 14, 8, 14, 14, 16, 8, 18, 30, 34, 20, 30, 40, 14];
+    const cols = widths.map((w, i) => `<col min="${i + 1}" max="${i + 1}" width="${w}" customWidth="1"/>`).join("");
+    const files = [
+      ["[Content_Types].xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>`],
+      ["_rels/.rels", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>`],
+      ["xl/workbook.xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="ใบสมัคร" sheetId="1" r:id="rId1"/></sheets></workbook>`],
+      ["xl/_rels/workbook.xml.rels", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>`],
+      ["xl/styles.xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="2"><font><sz val="11"/><name val="Tahoma"/></font><font><b/><sz val="11"/><name val="Tahoma"/></font></fonts><fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="2"><xf numFmtId="49" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/><xf numFmtId="49" fontId="1" fillId="0" borderId="0" xfId="0" applyNumberFormat="1" applyFont="1"/></cellXfs></styleSheet>`],
+      ["xl/worksheets/sheet1.xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><cols>${cols}</cols><sheetData>${sheetRows}</sheetData><autoFilter ref="A1:${colName(XL_HEAD.length - 1)}${rows.length}"/></worksheet>`],
+    ];
+    const a = el("a", { href: URL.createObjectURL(zipStore(files)), download: `rz-applications-${new Date().toISOString().slice(0, 10)}.xlsx` });
+    document.body.append(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  }
+
+  /** CSV ปลอดภัย: กัน formula injection ใน Excel (= + - @) และใส่ BOM ให้ภาษาไทยไม่เพี้ยน */
+  function exportCsv() {
+    const cell = (v) => {
+      let s = String(v ?? "");
+      if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;
+      return '"' + s.replace(/"/g, '""') + '"';
+    };
+    const head = ["รหัส", "วันที่", "ชื่อในเกม", "UID", "เลเวล", "แรงค์ BR", "แรงค์ CS", "สาย", "ระดับ", "ผู้ทดสอบ", "Instagram", "Messenger", "เวลาสะดวก", "รอบทดสอบ", "หมายเหตุ", "สถานะ"];
+    const lines = items.map((it) => [
+      it.ref, new Date(it.createdAt).toLocaleString("th-TH"), it.ign, it.uid, it.level, it.rankBR, it.rankCS,
+      TRACK[it.track] || it.track, it.tier, (it.testers || []).join(", "), it.instagram, it.messenger,
+      AVAIL[it.availability] || "", it.slotStart ? fmtSlot(it.slotStart) : "", it.note, STATUS[it.status] || it.status,
+    ].map(cell).join(","));
+    const blob = new Blob(["\uFEFF" + [head.map(cell).join(","), ...lines].join("\r\n")], { type: "text/csv;charset=utf-8" });
+    const a = el("a", { href: URL.createObjectURL(blob), download: `rz-applications-${new Date().toISOString().slice(0, 10)}.csv` });
+    document.body.append(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  }
+
+  function logout() {
+    pw = "";
+    items = [];
+    slots = [];
+    $("#slot-list").replaceChildren();
+    $("#rows").replaceChildren();
+    $("#panel").hidden = true;
+    $("#login").hidden = false;
+    clearTimeout(idleTimer);
+  }
+
+  function bumpIdle() {
+    clearTimeout(idleTimer);
+    if (pw) idleTimer = setTimeout(logout, IDLE_MS); // ไม่ใช้งาน 30 นาที ออกจากระบบอัตโนมัติ
+  }
+
+  $("#login").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const btn = $("#login-btn");
+    pw = $("#pw").value;
+    btn.disabled = true;
+    btn.textContent = "กำลังตรวจสอบ...";
+    $("#login-err").hidden = true;
+    const r = await load();
+    btn.disabled = false;
+    btn.textContent = "เข้าสู่ระบบ";
+    if (!r.ok) {
+      pw = "";
+      $("#login-err").textContent = r.error;
+      $("#login-err").hidden = false;
+      return;
+    }
+    $("#pw").value = "";
+    loadSlots();
+    $("#login").hidden = true;
+    $("#panel").hidden = false;
+    bumpIdle();
+  });
+
+  $("#refresh").addEventListener("click", async () => {
+    showMsg("");
+    const r = await load();
+    if (!r.ok) { if (r.status === 401) logout(); else showMsg(r.error); }
+    else loadSlots();
+  });
+  $("#csv").addEventListener("click", exportCsv);
+  $("#xlsx").addEventListener("click", exportXlsx);
+  $("#logout").addEventListener("click", logout);
+  $("#q").addEventListener("input", render);
+  $("#filter").addEventListener("change", render);
+  ["click", "keydown"].forEach((ev) => document.addEventListener(ev, bumpIdle));
+})();
+</script>
+</body>
+</html>

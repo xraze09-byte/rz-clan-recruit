@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#000000">
+<title>RZ CLAN | เปิดรับสมัครลูกทีม FREE FIRE</title>
+<meta name="description" content="ใบสมัครเข้าทีม RZ CLAN — Free Fire">
+<link rel="icon" href="logo.png">
+<link rel="preload" href="fonts/kanit-800.ttf" as="font" type="font/ttf" crossorigin>
+<style>
+@font-face{font-family:"Kanit";font-weight:400;font-style:normal;font-display:swap;src:url(fonts/kanit-400.ttf) format("truetype")}
+@font-face{font-family:"Kanit";font-weight:500 700;font-style:normal;font-display:swap;src:url(fonts/kanit-700.ttf) format("truetype")}
+@font-face{font-family:"Kanit";font-weight:800;font-style:normal;font-display:swap;src:url(fonts/kanit-800.ttf) format("truetype")}
+@font-face{font-family:"Kanit";font-weight:900;font-style:normal;font-display:swap;src:url(fonts/kanit-900.ttf) format("truetype")}
+:root{--red:#e10600;--red-hot:#ff2a2a;--red-deep:#7a0000;--muted:#a8a8a8}
+*,*::before,*::after{box-sizing:border-box}
+[hidden]{display:none!important}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{margin:0;background:#000;color:#fff;overflow-x:hidden;font-family:"Kanit","Noto Sans Thai",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:inherit}
+
+/* ===== SLOT PICKER ===== */
+.slot-day{margin:0 0 14px}
+.slot-day-title{margin:0 0 8px;font-size:14px;font-weight:800;color:var(--red-hot)}
+.slot-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:8px}
+.slot{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 6px;cursor:pointer;text-align:center;border:1.5px solid #333;border-radius:10px;background:#0d0d0d;transition:all .2s}
+.slot input{position:absolute;opacity:0;width:1px;height:1px}
+.slot:hover{border-color:#555}
+.slot:focus-within{outline:2px solid rgba(255,255,255,.45);outline-offset:2px}
+.slot.is-on{border-color:var(--red-hot);background:rgba(225,6,0,.15);box-shadow:0 0 14px rgba(225,6,0,.4)}
+.slot-time{font-weight:800;font-size:17px;line-height:1.3}
+.slot-sub{font-size:12px;color:#bbb;line-height:1.4}
+.slot-note{margin:0 0 10px;font-size:13px;color:var(--muted)}
+.slot-fallback{margin-top:6px;background:none;border:0;padding:4px 0;font:inherit;font-size:13px;color:#ddd;text-decoration:underline;cursor:pointer}
+
+/* ===== FORM ===== */
+.apply-wrap{max-width:640px;margin:0 auto;padding:28px 14px 72px;scroll-margin-top:12px}
+.form-card{position:relative;padding:24px 20px;border-radius:16px;scroll-margin-top:12px;background:linear-gradient(180deg,#140000,#050505 40%);border:1px solid rgba(255,40,40,.35);box-shadow:0 0 40px rgba(225,6,0,.2)}
+.form-logo{display:block;width:min(46%,170px);height:auto;margin:0 auto 14px}
+.form-title{margin:0 0 4px;font-size:clamp(24px,6vw,32px);font-weight:900;line-height:1.35;text-align:center;text-shadow:0 0 14px rgba(255,20,20,.6)}
+.form-sub{margin:0;text-align:center;color:var(--muted);font-size:14px}
+.demo{margin:12px 0 0;padding:8px 12px;border:1px dashed #ffb300;border-radius:8px;color:#ffd166;font-size:14px;text-align:center}
+.stepper{list-style:none;padding:0;margin:20px 0 10px;display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.stepper li{text-align:center;font-size:13px;color:#888;line-height:1.4}
+.stepper .dot{display:grid;place-items:center;width:34px;height:34px;margin:0 auto 6px;border-radius:50%;border:2px solid #444;font-weight:800;transition:all .25s}
+.stepper li.active{color:#fff}
+.stepper li.active .dot{border-color:var(--red-hot);background:var(--red);box-shadow:0 0 14px rgba(255,30,30,.7)}
+.stepper li.done .dot{border-color:var(--red);color:var(--red-hot)}
+.progress{height:4px;margin-bottom:14px;background:#222;border-radius:4px;overflow:hidden}
+.progress>i{display:block;height:100%;width:33.33%;background:linear-gradient(90deg,#a00000,#ff3b3b);transition:width .35s ease}
+.qual{list-style:none;padding:0;margin:0 0 16px;display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.pill{font-size:13px;padding:3px 10px;border-radius:999px;border:1px solid #444;color:#999;transition:all .2s}
+.pill.ok{border-color:#fff;color:#fff;box-shadow:0 0 10px rgba(255,40,40,.45)}
+.step{animation:stepIn .3s ease}
+.step-title{margin:0 0 14px;font-size:18px;font-weight:800;line-height:1.4;color:var(--red-hot);outline:none}
+@keyframes stepIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.field{margin:0 0 18px;padding:0;border:0;min-width:0}
+.label{display:block;margin-bottom:6px;font-weight:700;font-size:16px;line-height:1.4;padding:0}
+.req{color:var(--red-hot)}
+.hint{margin:5px 0 0;font-size:13px;color:var(--muted);line-height:1.5}
+.group-hint{margin:-6px 0 14px}
+.err{margin:6px 0 0;font-size:14px;color:#ff6b6b;line-height:1.5}
+.input,.select,.textarea{width:100%;font:inherit;font-size:16px;color:#fff;background:#0d0d0d;border:1.5px solid #333;border-radius:10px;padding:12px 14px;line-height:1.4;transition:border-color .2s,box-shadow .2s;appearance:none}
+.select{background-image:linear-gradient(45deg,transparent 50%,#ff3b3b 50%),linear-gradient(135deg,#ff3b3b 50%,transparent 50%);background-position:calc(100% - 20px) 50%,calc(100% - 14px) 50%;background-size:6px 6px;background-repeat:no-repeat;padding-right:40px}
+.select option{background:#111;color:#fff}
+.textarea{resize:vertical;min-height:84px}
+.input:focus-visible,.select:focus-visible,.textarea:focus-visible{outline:none;border-color:var(--red-hot);box-shadow:0 0 0 3px rgba(255,40,40,.25)}
+[aria-invalid="true"]{border-color:#ff4d4d!important}
+.choice-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.choice{position:relative;display:flex;flex-direction:column;gap:4px;padding:12px;cursor:pointer;border:1.5px solid #333;border-radius:12px;background:#0d0d0d;transition:all .2s}
+.choice input{position:absolute;opacity:0;width:1px;height:1px}
+.choice:hover{border-color:#555}
+.choice:focus-within{outline:2px solid rgba(255,255,255,.45);outline-offset:2px}
+.choice.is-on{border-color:var(--red-hot);background:rgba(225,6,0,.12);box-shadow:0 0 16px rgba(225,6,0,.35)}
+.choice-title{font-weight:800;font-size:15px}
+.choice-sub{font-size:13px;color:#ccc;line-height:1.45}
+.mini-badge{align-self:flex-start;font-weight:900;padding:1px 10px 2px;border-radius:6px;transform:skewX(-10deg);line-height:1.3}
+.mb-God{font-size:20px;background:linear-gradient(180deg,#ff5050,#a00000);border:2px solid #fff;box-shadow:0 0 12px rgba(255,30,30,.8)}
+.mb-SSS{font-size:18px;background:var(--red-deep);border:2px solid var(--red-hot)}
+.mb-SS{font-size:16px;border:2px solid var(--red)}
+.mb-S{font-size:15px;border:2px solid rgba(255,255,255,.6)}
+.criteria{margin:4px 0 14px;padding:12px 14px;border-left:4px solid var(--red);background:rgba(225,6,0,.08);border-radius:8px;font-size:14px;line-height:1.6}
+.summary{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;margin:0 0 16px;padding:14px;font-size:15px;background:#0b0b0b;border:1px solid #2a2a2a;border-radius:12px}
+.summary dt{color:var(--muted)}
+.summary dd{margin:0;font-weight:700;word-break:break-word}
+.check{display:flex;gap:10px;align-items:flex-start;font-size:14px;line-height:1.6;cursor:pointer}
+.check input{flex:none;width:22px;height:22px;margin-top:2px;accent-color:var(--red)}
+.ts-box{margin-top:14px;min-height:65px}
+.honeypot{position:absolute;left:-10000px;width:1px;height:1px;overflow:hidden}
+.alert{margin-bottom:16px;padding:12px 14px;border:1px solid #ff4d4d;border-radius:10px;background:rgba(255,0,0,.08);color:#ffb3b3;line-height:1.5}
+.btn-row{display:flex;gap:10px;margin-top:18px}
+.btn{flex:1;min-height:52px;padding:12px 16px;font:inherit;font-size:17px;font-weight:800;border-radius:12px;border:0;cursor:pointer;color:#fff;transition:transform .1s,box-shadow .2s,opacity .2s}
+.btn:active{transform:scale(.98)}
+.btn:focus-visible{outline:2px solid #fff;outline-offset:2px}
+.btn-primary{background:linear-gradient(180deg,#ff2a2a,#b00000);box-shadow:0 0 18px rgba(225,6,0,.5)}
+.btn-ghost{background:transparent;border:1.5px solid #444}
+.btn:disabled{opacity:.6;cursor:not-allowed}
+.btn.is-loading::before{content:"";display:inline-block;width:18px;height:18px;margin-right:8px;vertical-align:-3px;border:3px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.success{text-align:center;padding:20px 6px}
+.success-icon{display:grid;place-items:center;width:72px;height:72px;margin:0 auto 12px;border-radius:50%;font-size:36px;font-weight:900;background:var(--red);box-shadow:0 0 28px rgba(255,30,30,.8)}
+.slot-booked{margin:0 0 12px;padding:10px 12px;border:1px solid var(--red);border-radius:10px;background:rgba(225,6,0,.12);font-weight:800;line-height:1.5}
+.ref{margin:4px 0 12px;font-size:30px;font-weight:900;letter-spacing:2px;color:var(--red-hot);text-shadow:0 0 14px rgba(255,30,30,.6);word-break:break-all}
+.noscript{text-align:center;color:#ffb3b3;padding:16px}
+@media (max-width:480px){.choice-grid{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<main>
+  <!-- ===== ใบสมัคร ===== -->
+  <section id="apply" class="apply-wrap" aria-label="ใบสมัคร">
+    <div class="form-card" id="card">
+      <img class="form-logo" src="logo.png" alt="RZ CLAN" width="160" height="auto">
+      <noscript><p class="noscript">กรุณาเปิด JavaScript เพื่อกรอกใบสมัคร</p></noscript>
+
+      <div id="form-view">
+        <h2 class="form-title">ใบสมัครเข้าทีม RZ CLAN</h2>
+        <p class="form-sub">กรอก 3 ขั้นตอน • ระบบบันทึกร่างให้อัตโนมัติ</p>
+        <p class="demo" id="demo-note" hidden>โหมดทดลอง (เปิดไฟล์จากเครื่อง) ข้อมูลจะไม่ถูกส่งจริง</p>
+
+        <ol class="stepper" id="stepper" aria-label="ขั้นตอนการสมัคร">
+          <li><span class="dot">1</span>ข้อมูลผู้เล่น</li>
+          <li><span class="dot">2</span>แรงค์ &amp; ระดับ</li>
+          <li><span class="dot">3</span>ติดต่อ &amp; ยืนยัน</li>
+        </ol>
+        <div class="progress" aria-hidden="true"><i id="progress-bar"></i></div>
+
+        <ul class="qual" id="qual" aria-label="ตรวจคุณสมบัติเบื้องต้น">
+          <li class="pill" data-q="level" data-label="เลเวล 30+">เลเวล 30+</li>
+          <li class="pill" data-q="rankBR" data-label="BR Diamond 1+">BR Diamond 1+</li>
+          <li class="pill" data-q="rankCS" data-label="CS Diamond 1+">CS Diamond 1+</li>
+        </ul>
+
+        <div class="alert" id="server-error" role="alert" hidden></div>
+
+        <form id="apply-form" novalidate autocomplete="off">
+          <div class="honeypot" aria-hidden="true">
+            <label for="website">Website</label>
+            <input id="website" name="website" tabindex="-1" autocomplete="off">
+          </div>
+
+          <!-- ขั้นที่ 1 -->
+          <div class="step" data-step="0">
+            <h3 class="step-title" tabindex="-1">ขั้นที่ 1 จาก 3 · ข้อมูลผู้เล่น</h3>
+            <div class="field">
+              <label class="label" for="f-ign">ชื่อในเกม (IGN) <span class="req">*</span></label>
+              <input class="input" id="f-ign" name="ign" maxlength="20" spellcheck="false" enterkeyhint="next" aria-describedby="h-ign">
+              <p class="hint" id="h-ign">พิมพ์ให้ตรงกับในเกม</p>
+              <p class="err" id="e-ign" hidden></p>
+            </div>
+            <div class="field">
+              <label class="label" for="f-uid">UID Free Fire <span class="req">*</span></label>
+              <input class="input" id="f-uid" name="uid" inputmode="numeric" maxlength="12" enterkeyhint="next" aria-describedby="h-uid">
+              <p class="hint" id="h-uid">ตัวเลข 8–12 หลัก ดูได้ที่หน้าโปรไฟล์ในเกม</p>
+              <p class="err" id="e-uid" hidden></p>
+            </div>
+            <div class="field">
+              <label class="label" for="f-level">เลเวลบัญชี <span class="req">*</span></label>
+              <input class="input" id="f-level" name="level" inputmode="numeric" maxlength="3" enterkeyhint="next" aria-describedby="h-level">
+              <p class="hint" id="h-level">ต้อง 30 ขึ้นไป</p>
+              <p class="err" id="e-level" hidden></p>
+            </div>
+          </div>
+
+          <!-- ขั้นที่ 2 -->
+          <div class="step" data-step="1" hidden>
+            <h3 class="step-title" tabindex="-1">ขั้นที่ 2 จาก 3 · แรงค์ &amp; ระดับ</h3>
+            <div class="field">
+              <label class="label" for="f-rankBR">แรงค์ BR <span class="req">*</span></label>
+              <select class="select" id="f-rankBR" name="rankBR" aria-describedby="h-rankBR">
+                <option value="">— เลือกแรงค์ —</option>
+                <option>Diamond 1</option><option>Diamond 2</option><option>Diamond 3</option><option>Diamond 4</option>
+                <option>Heroic</option><option>Master</option><option>Grandmaster</option>
+                <option value="BELOW">ต่ำกว่า Diamond 1</option>
+              </select>
+              <p class="hint" id="h-rankBR">ต้อง Diamond 1 ขึ้นไป</p>
+              <p class="err" id="e-rankBR" hidden></p>
+            </div>
+            <div class="field">
+              <label class="label" for="f-rankCS">แรงค์ CS <span class="req">*</span></label>
+              <select class="select" id="f-rankCS" name="rankCS" aria-describedby="h-rankCS">
+                <option value="">— เลือกแรงค์ —</option>
+                <option>Diamond 1</option><option>Diamond 2</option><option>Diamond 3</option><option>Diamond 4</option>
+                <option>Heroic</option><option>Master</option><option>Grandmaster</option>
+                <option value="BELOW">ต่ำกว่า Diamond 1</option>
+              </select>
+              <p class="hint" id="h-rankCS">ต้อง Diamond 1 ขึ้นไป</p>
+              <p class="err" id="e-rankCS" hidden></p>
+            </div>
+            <fieldset class="field">
+              <legend class="label">เลือกสาย <span class="req">*</span></legend>
+              <div class="choice-grid">
+                <label class="choice"><input type="radio" name="track" value="LEAGUE" id="f-track"><span class="choice-title">TIER LEAGUE</span><span class="choice-sub">สายลีก</span></label>
+                <label class="choice"><input type="radio" name="track" value="HIGHLIGHTS"><span class="choice-title">TIER HIGHLIGHTS</span><span class="choice-sub">สายไฮไลท์</span></label>
+              </div>
+              <p class="err" id="e-track" hidden></p>
+            </fieldset>
+            <fieldset class="field">
+              <legend class="label">เลือกระดับความยาก <span class="req">*</span></legend>
+              <div class="choice-grid">
+                <label class="choice"><input type="radio" name="tier" value="God" id="f-tier"><span class="mini-badge mb-God">God</span><span class="choice-sub" data-testers="God">เลือกสายก่อนเพื่อดูผู้ทดสอบ</span></label>
+                <label class="choice"><input type="radio" name="tier" value="SSS"><span class="mini-badge mb-SSS">SSS</span><span class="choice-sub" data-testers="SSS">เลือกสายก่อนเพื่อดูผู้ทดสอบ</span></label>
+                <label class="choice"><input type="radio" name="tier" value="SS"><span class="mini-badge mb-SS">SS</span><span class="choice-sub" data-testers="SS">เลือกสายก่อนเพื่อดูผู้ทดสอบ</span></label>
+                <label class="choice"><input type="radio" name="tier" value="S"><span class="mini-badge mb-S">S</span><span class="choice-sub" data-testers="S">เลือกสายก่อนเพื่อดูผู้ทดสอบ</span></label>
+              </div>
+              <p class="err" id="e-tier" hidden></p>
+            </fieldset>
+          </div>
+
+          <!-- ขั้นที่ 3 -->
+          <div class="step" data-step="2" hidden>
+            <h3 class="step-title" tabindex="-1">ขั้นที่ 3 จาก 3 · ติดต่อ &amp; ยืนยัน</h3>
+            <p class="hint group-hint">ทิ้งชื่อหรือลิงก์บัญชี Instagram หรือ Facebook Messenger อย่างน้อย 1 ช่องทาง เพื่อให้ทีมงานติดต่อนัดวันทดสอบ</p>
+            <div class="field">
+              <label class="label" for="f-instagram">Instagram (ชื่อหรือลิงก์โปรไฟล์)</label>
+              <input class="input" id="f-instagram" name="instagram" maxlength="100" placeholder="เช่น @rz_player หรือ https://instagram.com/rz_player" autocapitalize="none" spellcheck="false">
+              <p class="err" id="e-instagram" hidden></p>
+            </div>
+            <div class="field">
+              <label class="label" for="f-messenger">Facebook Messenger (ชื่อหรือลิงก์โปรไฟล์)</label>
+              <input class="input" id="f-messenger" name="messenger" maxlength="150" placeholder="เช่น https://m.me/rz.player หรือ https://facebook.com/rz.player" autocapitalize="none" spellcheck="false">
+              <p class="err" id="e-messenger" hidden></p>
+            </div>
+            <fieldset class="field" id="slot-field" hidden>
+              <legend class="label">เลือกรอบทดสอบ <span class="req">*</span></legend>
+              <p class="slot-note">เวลาตามเขตประเทศไทย (GMT+7) • เลือกได้ 1 รอบ</p>
+              <div id="slot-list"></div>
+              <p class="err" id="e-slotId" hidden></p>
+              <button type="button" class="slot-fallback" id="slot-fallback">ไม่มีรอบที่สะดวก? ระบุช่วงเวลาที่สะดวกแทน</button>
+            </fieldset>
+            <div class="field" id="avail-field">
+              <label class="label" for="f-availability">ช่วงเวลาที่สะดวกทดสอบ <span class="req">*</span></label>
+              <select class="select" id="f-availability" name="availability">
+                <option value="">— เลือกช่วงเวลา —</option>
+                <option value="weekday_evening">วันธรรมดา ช่วงเย็น</option>
+                <option value="weekday_night">วันธรรมดา ช่วงดึก</option>
+                <option value="weekend">เสาร์–อาทิตย์</option>
+                <option value="anytime">ได้ทุกช่วงเวลา</option>
+              </select>
+              <p class="err" id="e-availability" hidden></p>
+              <button type="button" class="slot-fallback" id="slot-back" hidden>กลับไปเลือกรอบทดสอบ</button>
+            </div>
+            <div class="field">
+              <label class="label" for="f-note">หมายเหตุ (ไม่บังคับ)</label>
+              <textarea class="textarea" id="f-note" name="note" rows="3" maxlength="300" aria-describedby="h-note"></textarea>
+              <p class="hint" id="h-note">0/300</p>
+              <p class="err" id="e-note" hidden></p>
+            </div>
+
+            <div class="criteria"><strong>เกณฑ์ทดสอบ:</strong> 1 เกมมี 7 ตา ต้องผ่านมากกว่า 5 ตา (อย่างน้อย 6 จาก 7 ตา) • สู้กับลูกทีม 2 คนต่อเกม</div>
+
+            <dl class="summary">
+              <dt>ชื่อในเกม</dt><dd id="sum-ign">-</dd>
+              <dt>UID</dt><dd id="sum-uid">-</dd>
+              <dt>เลเวล</dt><dd id="sum-level">-</dd>
+              <dt>แรงค์</dt><dd id="sum-rank">-</dd>
+              <dt>สาย / ระดับ</dt><dd id="sum-track">-</dd>
+              <dt>ผู้ทดสอบ</dt><dd id="sum-testers">-</dd>
+              <dt>รอบทดสอบ / เวลาสะดวก</dt><dd id="sum-avail">-</dd>
+            </dl>
+
+            <label class="check">
+              <input type="checkbox" id="f-consent" name="consent">
+              <span>ยืนยันว่าข้อมูลถูกต้อง และยินยอมให้ RZ CLAN เก็บข้อมูลนี้เพื่อใช้คัดเลือกสมาชิกเท่านั้น (ลบอัตโนมัติภายใน 90 วัน)</span>
+            </label>
+            <p class="err" id="e-consent" hidden></p>
+
+            <div id="ts-box" class="ts-box" hidden></div>
+          </div>
+
+          <div class="btn-row">
+            <button type="button" class="btn btn-ghost" id="btn-back" hidden>ย้อนกลับ</button>
+            <button type="submit" class="btn btn-primary" id="btn-next">ถัดไป</button>
+          </div>
+        </form>
+      </div>
+
+      <div id="success-view" class="success" role="status" hidden>
+        <div class="success-icon" aria-hidden="true">✓</div>
+        <h2 class="form-title">ส่งใบสมัครเรียบร้อย</h2>
+        <p>รหัสอ้างอิงของคุณ</p>
+        <p class="ref" id="ref-code"></p>
+        <p class="slot-booked" id="slot-booked" hidden></p>
+        <p class="hint">แคปหน้าจอเก็บไว้ ทีมงานจะติดต่อกลับทาง Instagram / Facebook Messenger เพื่อยืนยันวันทดสอบ</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+(() => {
+  "use strict";
+
+  /* ========== ตั้งค่า ========== */
+  const TURNSTILE_SITE_KEY = ""; // ใส่ Site Key ของ Cloudflare Turnstile (ถ้าใช้) ส่วน Secret Key ใส่ใน env ของ Vercel
+  const API_URL = "/api/apply";
+  const DEMO = location.protocol === "file:";
+
+  /* ========== ข้อมูล ========== */
+  const TRACKS = ["LEAGUE", "HIGHLIGHTS"];
+  const TIERS = ["God", "SSS", "SS", "S"];
+  const TRACK_LABEL = { LEAGUE: "TIER LEAGUE", HIGHLIGHTS: "TIER HIGHLIGHTS" };
+  const TIER_TABLE = {
+    LEAGUE: { God: ["ฟลุ๊ค"], SSS: ["กัน"], SS: ["ปาย", "น้อต"], S: ["ปั้น", "โต้", "เกล้า"] },
+    HIGHLIGHTS: { God: ["เกล้า"], SSS: ["กัน", "น้อต"], SS: ["ฟลุ๊ค", "ปั้น"], S: ["โต้", "ปาย"] },
+  };
+  const RANKS = ["Diamond 1", "Diamond 2", "Diamond 3", "Diamond 4", "Heroic", "Master", "Grandmaster"];
+  const AVAIL = { weekday_evening: "วันธรรมดา ช่วงเย็น", weekday_night: "วันธรรมดา ช่วงดึก", weekend: "เสาร์–อาทิตย์", anytime: "ได้ทุกช่วงเวลา" };
+  const STEP_FIELDS = [
+    ["ign", "uid", "level"],
+    ["rankBR", "rankCS", "track", "tier"],
+    ["instagram", "messenger", "slotId", "availability", "note", "consent"],
+  ];
+  const ALL_FIELDS = STEP_FIELDS.flat();
+  // Instagram: @ชื่อ / ชื่อ (a-z 0-9 _ .) หรือลิงก์ instagram.com/ชื่อ
+  const IG_RE = /^(?:@?[A-Za-z0-9._]{1,30}|(?:https?:\/\/)?(?:www\.)?(?:instagram\.com|instagr\.am)\/[A-Za-z0-9._\/?=&%-]{1,100})$/;
+  // Messenger: ลิงก์ facebook.com / fb.com / m.me / messenger.com หรือชื่อบัญชีทั่วไป
+  const MSG_RE = /^(?:(?:https?:\/\/)?(?:www\.|m\.|web\.)?(?:facebook\.com|fb\.com|fb\.me|m\.me|messenger\.com)\/[A-Za-z0-9._\/?=&%-]{1,120}|[^\s<>\/\\]{2,60}(?: [^\s<>\/\\]{1,30}){0,3})$/;
+  const DRAFT_KEY = "rz-apply-draft-v2";
+  const SLOTS_URL = "/api/slots";
+  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+  const has = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
+  const smooth = matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
+
+  /* ========== กฎตรวจข้อมูล (ฝั่ง server ตรวจซ้ำอีกรอบ) ========== */
+  const CTRL = /[\u0000-\u001F\u007F]/;
+  const CTRL_NL = /[\u0000-\u0009\u000B-\u001F\u007F]/;
+  const INVISIBLE = /[\u200B-\u200F\u202A-\u202E\u2060-\u2069\uFEFF]/;
+  const rankRule = (v, label) =>
+    v === "" ? `เลือกแรงค์ ${label}` : RANKS.includes(v) ? "" : `แรงค์ ${label} ต้อง Diamond 1 ขึ้นไป จึงจะสมัครได้`;
+
+  const RULES = {
+    ign(v) {
+      v = v.trim();
+      if (v.length < 2) return "กรอกชื่อในเกมอย่างน้อย 2 ตัวอักษร";
+      if (v.length > 20) return "ชื่อในเกมยาวเกิน 20 ตัวอักษร";
+      if (CTRL.test(v) || INVISIBLE.test(v) || /[<>]/.test(v)) return "ชื่อมีอักขระที่ไม่อนุญาต";
+      return "";
+    },
+    uid: (v) => (/^\d{8,12}$/.test(v.trim()) ? "" : "UID ต้องเป็นตัวเลข 8–12 หลัก"),
+    level(v) {
+      if (!/^\d{1,3}$/.test(v.trim())) return "กรอกเลเวลเป็นตัวเลข";
+      const n = Number(v);
+      if (n < 30) return "เลเวลต้อง 30 ขึ้นไป";
+      if (n > 100) return "เลเวลไม่ถูกต้อง";
+      return "";
+    },
+    rankBR: (v) => rankRule(v, "BR"),
+    rankCS: (v) => rankRule(v, "CS"),
+    track: (v) => (TRACKS.includes(v) ? "" : "เลือกสายที่ต้องการสมัคร"),
+    tier: (v) => (TIERS.includes(v) ? "" : "เลือกระดับความยาก"),
+    instagram: (v) => (v.trim() === "" || IG_RE.test(v.trim()) ? "" : "Instagram ไม่ถูกต้อง ใส่ชื่อ เช่น @rz_player หรือลิงก์ instagram.com/..."),
+    messenger: (v) => (v.trim() === "" || MSG_RE.test(v.trim()) ? "" : "Messenger ไม่ถูกต้อง ใส่ลิงก์ facebook.com/... หรือ m.me/... หรือชื่อบัญชี"),
+    availability: (v) => (slotMode || has(AVAIL, v) ? "" : "เลือกช่วงเวลาที่สะดวกทดสอบ"),
+    slotId: (v) => (!slotMode || (UUID_RE.test(v) && slots.some((s) => s.id === v)) ? "" : "เลือกรอบทดสอบ 1 รอบ"),
+    note(v) {
+      if (v.trim().length > 300) return "หมายเหตุไม่เกิน 300 ตัวอักษร";
+      if (CTRL_NL.test(v) || INVISIBLE.test(v)) return "มีอักขระที่ไม่อนุญาต";
+      return "";
+    },
+    consent: (v) => (v === true ? "" : "กรุณาติ๊กยืนยันก่อนส่ง"),
+  };
+
+  function validate(keys, d) {
+    const errs = {};
+    for (const k of keys) {
+      const m = RULES[k](d[k]);
+      if (m) errs[k] = m;
+    }
+    if (keys.includes("instagram") && !errs.instagram && !d.instagram.trim() && !d.messenger.trim()) {
+      errs.instagram = "กรอกช่องทางติดต่ออย่างน้อย 1 ช่องทาง (Instagram หรือ Messenger)";
+    }
+    return errs;
+  }
+
+  /* ========== DOM ========== */
+  const form = $("#apply-form");
+  const card = $("#card");
+  const steps = $$(".step", form);
+  const btnNext = $("#btn-next");
+  const btnBack = $("#btn-back");
+  const serverErr = $("#server-error");
+  const t0 = performance.now();
+  let step = 0;
+  let submitting = false;
+  let slots = [];        // รอบทดสอบที่ว่าง (โหลดจาก /api/slots)
+  let slotMode = false;  // true = ให้เลือกรอบ, false = ใช้ช่วงเวลาที่สะดวกแบบเดิม
+  let slotId = "";
+
+  if (DEMO) $("#demo-note").hidden = false;
+
+  function readForm() {
+    const val = (n) => {
+      const el = form.elements.namedItem(n);
+      return el && "value" in el ? String(el.value) : "";
+    };
+    return {
+      ign: val("ign"), uid: val("uid"), level: val("level"),
+      rankBR: val("rankBR"), rankCS: val("rankCS"), track: val("track"), tier: val("tier"),
+      instagram: val("instagram"), messenger: val("messenger"), availability: slotMode ? "" : val("availability"), slotId: slotMode ? slotId : "", note: val("note"),
+      consent: $("#f-consent").checked,
+    };
+  }
+
+  function setError(k, msg) {
+    const err = $("#e-" + k);
+    const hint = $("#h-" + k);
+    const input = $("#f-" + k);
+    if (err) { err.textContent = msg || ""; err.hidden = !msg; }
+    if (hint) hint.hidden = !!msg;
+    if (input) {
+      if (msg) input.setAttribute("aria-invalid", "true");
+      else input.removeAttribute("aria-invalid");
+      const desc = msg ? "e-" + k : hint ? "h-" + k : "";
+      if (desc) input.setAttribute("aria-describedby", desc);
+      else input.removeAttribute("aria-describedby");
+    }
+  }
+
+  function showErrors(errs, order) {
+    for (const k of order) setError(k, errs[k] || "");
+    const first = order.find((k) => errs[k]);
+    if (first) ($("#f-" + first) || (first === "slotId" ? $(".slot input") : null))?.focus();
+  }
+
+  const showServerError = (m) => { serverErr.textContent = m; serverErr.hidden = false; };
+  const hideServerError = () => { serverErr.hidden = true; serverErr.textContent = ""; };
+
+  function updateQual() {
+    const d = readForm();
+    const ok = { level: RULES.level(d.level) === "", rankBR: RANKS.includes(d.rankBR), rankCS: RANKS.includes(d.rankCS) };
+    $$("#qual .pill").forEach((p) => {
+      const good = !!ok[p.dataset.q];
+      p.classList.toggle("ok", good);
+      p.textContent = (good ? "✓ " : "") + p.dataset.label;
+    });
+  }
+
+  function updateChoices() {
+    $$(".choice").forEach((c) => c.classList.toggle("is-on", c.querySelector("input").checked));
+  }
+
+  function updateTesters() {
+    const track = readForm().track;
+    const table = TRACKS.includes(track) ? TIER_TABLE[track] : null;
+    $$("[data-testers]").forEach((el) => {
+      const names = table ? table[el.dataset.testers] : null;
+      el.textContent = names ? "ผู้ทดสอบ: " + names.join(", ") : "เลือกสายก่อนเพื่อดูผู้ทดสอบ";
+    });
+  }
+
+  function renderSummary() {
+    const d = readForm();
+    const testers = TRACKS.includes(d.track) && TIERS.includes(d.tier) ? TIER_TABLE[d.track][d.tier].join(", ") : "-";
+    $("#sum-ign").textContent = d.ign.trim() || "-";
+    $("#sum-uid").textContent = d.uid || "-";
+    $("#sum-level").textContent = d.level || "-";
+    $("#sum-rank").textContent = `BR ${d.rankBR || "-"} • CS ${d.rankCS || "-"}`;
+    $("#sum-track").textContent = `${TRACK_LABEL[d.track] || "-"} • ${d.tier || "-"}`;
+    $("#sum-testers").textContent = testers;
+    const sl = slotMode ? slots.find((x) => x.id === d.slotId) : null;
+    $("#sum-avail").textContent = sl ? fmtSlot(sl.start) : has(AVAIL, d.availability) ? AVAIL[d.availability] : "-";
+  }
+
+  /* ========== บันทึกร่าง (sessionStorage หายเมื่อปิดแท็บ) ========== */
+  let draftTimer;
+  function saveDraft() {
+    clearTimeout(draftTimer);
+    draftTimer = setTimeout(() => {
+      try {
+        const { consent, ...rest } = readForm();
+        sessionStorage.setItem(DRAFT_KEY, JSON.stringify(rest));
+      } catch (_) { /* ignore */ }
+    }, 250);
+  }
+
+  function loadDraft() {
+    let d;
+    try { d = JSON.parse(sessionStorage.getItem(DRAFT_KEY) || "null"); } catch (_) { return; }
+    if (!d || typeof d !== "object") return;
+    for (const k of ["ign", "uid", "level", "instagram", "messenger", "note"]) {
+      if (typeof d[k] === "string" && d[k].length <= 300) $("#f-" + k).value = d[k];
+    }
+    for (const k of ["rankBR", "rankCS", "availability"]) {
+      const el = $("#f-" + k);
+      if (typeof d[k] === "string" && Array.from(el.options).some((o) => o.value === d[k])) el.value = d[k];
+    }
+    for (const k of ["track", "tier"]) {
+      const r = $$(`input[name="${k}"]`).find((x) => x.value === d[k]);
+      if (r) r.checked = true;
+    }
+    $("#h-note").textContent = `${$("#f-note").value.length}/300`;
+  }
+
+  /* ========== นัดวันทดสอบ (เลือกรอบ) ========== */
+  const TZ = "Asia/Bangkok";
+  const fmtDay = new Intl.DateTimeFormat("th-TH", { timeZone: TZ, weekday: "long", day: "numeric", month: "long", year: "numeric" });
+  const fmtDayKey = new Intl.DateTimeFormat("en-CA", { timeZone: TZ });
+  const fmtTime = new Intl.DateTimeFormat("th-TH", { timeZone: TZ, hour: "2-digit", minute: "2-digit", hour12: false });
+  const fmtFull = new Intl.DateTimeFormat("th-TH", { timeZone: TZ, dateStyle: "full", timeStyle: "short" });
+  function fmtSlot(iso) { return fmtFull.format(new Date(iso)) + " น."; }
+
+  function renderSlots() {
+    const box = $("#slot-list");
+    box.replaceChildren();
+    const days = new Map();
+    for (const sl of slots) {
+      const k = fmtDayKey.format(new Date(sl.start));
+      if (!days.has(k)) days.set(k, []);
+      days.get(k).push(sl);
+    }
+    for (const list of days.values()) {
+      const day = document.createElement("div");
+      day.className = "slot-day";
+      const h = document.createElement("p");
+      h.className = "slot-day-title";
+      h.textContent = fmtDay.format(new Date(list[0].start));
+      const grid = document.createElement("div");
+      grid.className = "slot-grid";
+      for (const sl of list) {
+        const lab = document.createElement("label");
+        lab.className = "slot" + (sl.id === slotId ? " is-on" : "");
+        const inp = document.createElement("input");
+        inp.type = "radio"; inp.name = "slot"; inp.value = sl.id; inp.checked = sl.id === slotId;
+        const t = document.createElement("span");
+        t.className = "slot-time"; t.textContent = fmtTime.format(new Date(sl.start)) + " น.";
+        const sub = document.createElement("span");
+        sub.className = "slot-sub";
+        sub.textContent = [sl.label, sl.left <= 3 ? `เหลือ ${sl.left} ที่` : ""].filter(Boolean).join(" • ") || "ว่าง";
+        lab.append(inp, t, sub);
+        grid.append(lab);
+      }
+      day.append(h, grid);
+      box.append(day);
+    }
+  }
+
+  function setSlotMode(on) {
+    slotMode = on && slots.length > 0;
+    $("#slot-field").hidden = !slotMode;
+    $("#avail-field").hidden = slotMode;
+    $("#slot-back").hidden = slots.length === 0;
+    setError("slotId", "");
+    setError("availability", "");
+    if (slotMode) renderSlots();
+  }
+
+  async function loadSlots() {
+    if (DEMO) {
+      // โหมดทดลอง: สร้างรอบจำลอง 3 วันข้างหน้า
+      const base = new Date(); base.setMinutes(0, 0, 0);
+      slots = [];
+      for (let d = 1; d <= 3; d++) for (const h of [19, 20, 21]) {
+        const t = new Date(base); t.setDate(t.getDate() + d); t.setHours(h);
+        slots.push({ id: `00000000-0000-4000-8000-${String(d * 100 + h).padStart(12, "0")}`, start: t.toISOString(), label: "", left: 1 });
+      }
+    } else {
+      try {
+        const res = await fetch(SLOTS_URL, { cache: "no-store", credentials: "same-origin" });
+        const data = await res.json().catch(() => ({}));
+        slots = res.ok && Array.isArray(data.slots)
+          ? data.slots.filter((x) => x && UUID_RE.test(x.id) && Number.isFinite(Date.parse(x.start)))
+              .map((x) => ({ id: x.id, start: x.start, label: typeof x.label === "string" ? x.label.slice(0, 60) : "", left: Number(x.left) || 1 }))
+          : [];
+      } catch (_) { slots = []; }
+    }
+    if (!slots.some((x) => x.id === slotId)) slotId = "";
+    setSlotMode(slots.length > 0 && !slotOptOut);
+  }
+  let slotOptOut = false;
+
+  /* ========== Turnstile (กันบอท ถ้าตั้ง Site Key) ========== */
+  let tsWidget = null, tsToken = "", tsRequested = false;
+  function renderTurnstile() {
+    if (!TURNSTILE_SITE_KEY || DEMO || tsRequested) return;
+    tsRequested = true;
+    $("#ts-box").hidden = false;
+    const draw = () => {
+      tsWidget = window.turnstile.render("#ts-box", {
+        sitekey: TURNSTILE_SITE_KEY, theme: "dark", language: "th",
+        callback: (t) => { tsToken = t; },
+        "expired-callback": () => { tsToken = ""; },
+        "error-callback": () => { tsToken = ""; },
+      });
+    };
+    if (window.turnstile) return draw();
+    window.rzTurnstileReady = draw;
+    const s = document.createElement("script");
+    s.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=rzTurnstileReady";
+    s.async = true;
+    document.head.appendChild(s);
+  }
+  function resetTurnstile() {
+    tsToken = "";
+    if (tsWidget !== null && window.turnstile) window.turnstile.reset(tsWidget);
+  }
+
+  /* ========== เปลี่ยนขั้นตอน ========== */
+  function goTo(i, scroll = true) {
+    step = i;
+    steps.forEach((s, j) => { s.hidden = j !== i; });
+    $$("#stepper li").forEach((li, j) => {
+      li.classList.toggle("active", j === i);
+      li.classList.toggle("done", j < i);
+      if (j === i) li.setAttribute("aria-current", "step"); else li.removeAttribute("aria-current");
+      li.querySelector(".dot").textContent = j < i ? "✓" : String(j + 1);
+    });
+    $("#progress-bar").style.width = ((i + 1) / 3) * 100 + "%";
+    btnBack.hidden = i === 0;
+    btnNext.textContent = i < 2 ? "ถัดไป" : "ส่งใบสมัคร";
+    if (i === 2) { renderSummary(); renderTurnstile(); }
+    if (scroll) {
+      requestAnimationFrame(() => {
+        card.scrollIntoView({ behavior: smooth, block: "start" });
+        steps[i].querySelector(".step-title").focus({ preventScroll: true });
+      });
+    }
+  }
+
+  function next() {
+    const keys = STEP_FIELDS[step];
+    const errs = validate(keys, readForm());
+    if (Object.keys(errs).length) return showErrors(errs, keys);
+    goTo(step + 1);
+  }
+
+  function setSubmitting(on) {
+    submitting = on;
+    btnNext.disabled = on;
+    btnBack.disabled = on;
+    btnNext.classList.toggle("is-loading", on);
+    btnNext.textContent = on ? "กำลังส่ง..." : "ส่งใบสมัคร";
+  }
+
+  function randomRef() {
+    const a = new Uint8Array(4);
+    crypto.getRandomValues(a);
+    return "RZ-" + Array.from(a, (b) => b.toString(16).padStart(2, "0")).join("").toUpperCase();
+  }
+
+  function done(ref, slotStart) {
+    const sb = $("#slot-booked");
+    sb.hidden = !slotStart;
+    sb.textContent = slotStart ? "รอบทดสอบที่จอง: " + fmtSlot(slotStart) : "";
+    try { sessionStorage.removeItem(DRAFT_KEY); } catch (_) { /* ignore */ }
+    $("#form-view").hidden = true;
+    $("#success-view").hidden = false;
+    $("#ref-code").textContent = ref + (DEMO ? " (ทดลอง)" : "");
+    card.scrollIntoView({ behavior: smooth, block: "start" });
+  }
+
+  async function submit() {
+    if (submitting) return;
+    const d = readForm();
+    const errs = validate(ALL_FIELDS, d);
+    if (Object.keys(errs).length) {
+      const s = STEP_FIELDS.findIndex((fs) => fs.some((f) => errs[f]));
+      if (s !== step) goTo(s, false);
+      return showErrors(errs, STEP_FIELDS[s]);
+    }
+    if (TURNSTILE_SITE_KEY && !DEMO && !tsToken) return showServerError("กรุณายืนยันว่าไม่ใช่บอทก่อนส่ง");
+
+    setSubmitting(true);
+    hideServerError();
+    try {
+      let result;
+      if (DEMO) {
+        await new Promise((r) => setTimeout(r, 700));
+        result = { ok: true, ref: randomRef() };
+      } else {
+        const res = await fetch(API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "same-origin",
+          body: JSON.stringify({
+            ...d,
+            website: form.elements.namedItem("website").value,
+            elapsedMs: Math.round(performance.now() - t0),
+            turnstileToken: tsToken,
+          }),
+        });
+        result = await res.json().catch(() => ({}));
+        if (!res.ok) result.ok = false;
+      }
+
+      if (!result.ok) {
+        showServerError(typeof result.error === "string" ? result.error : "ส่งใบสมัครไม่สำเร็จ กรุณาลองใหม่");
+        if (result.fieldErrors && typeof result.fieldErrors === "object") {
+          const fe = {};
+          for (const k of ALL_FIELDS) if (typeof result.fieldErrors[k] === "string") fe[k] = result.fieldErrors[k];
+          const s = STEP_FIELDS.findIndex((fs) => fs.some((f) => fe[f]));
+          if (s >= 0) { if (s !== step) goTo(s, false); showErrors(fe, STEP_FIELDS[s]); }
+        }
+        if (result.slotsChanged) { slotId = ""; await loadSlots(); renderSummary(); }
+        resetTurnstile();
+        return;
+      }
+      const ref = typeof result.ref === "string" && /^RZ-[A-Z0-9]{8}$/.test(result.ref) ? result.ref : "RZ";
+      const booked = slotMode ? slots.find((x) => x.id === d.slotId) : null;
+      done(ref, booked ? booked.start : "");
+    } catch (_) {
+      showServerError("เชื่อมต่อไม่ได้ ตรวจสอบอินเทอร์เน็ตแล้วลองใหม่");
+      resetTurnstile();
+    } finally {
+      if (!$("#form-view").hidden) setSubmitting(false);
+    }
+  }
+
+  /* ========== Events ========== */
+  form.addEventListener("input", (e) => {
+    const t = e.target;
+    const k = t.name;
+    if (!k || k === "website") return;
+    if (k === "uid" || k === "level") { const v = t.value.replace(/\D/g, ""); if (v !== t.value) t.value = v; }
+    if (k === "note") $("#h-note").textContent = `${t.value.length}/300`;
+    setError(k, "");
+    if (k === "instagram" || k === "messenger") { setError("instagram", ""); setError("messenger", ""); }
+    hideServerError();
+    updateQual();
+    saveDraft();
+  });
+
+  form.addEventListener("change", (e) => {
+    const t = e.target;
+    if (t.name === "slot") {
+      slotId = t.value;
+      setError("slotId", "");
+      renderSummary();
+      $$(".slot").forEach((l) => l.classList.toggle("is-on", l.querySelector("input").checked));
+      saveDraft();
+      return;
+    }
+    if (t.name === "rankBR" || t.name === "rankCS") setError(t.name, RULES[t.name](t.value));
+    if (t.type === "radio") { setError(t.name, ""); updateChoices(); updateTesters(); }
+    if (t.name === "consent") setError("consent", "");
+    updateQual();
+    saveDraft();
+  });
+
+  form.addEventListener("focusout", (e) => {
+    const t = e.target;
+    const k = t.name;
+    if (!k || !has(RULES, k) || t.type === "radio" || t.type === "checkbox" || t.value === "") return;
+    setError(k, RULES[k](t.value));
+  });
+
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    if (step < 2) next(); else submit();
+  });
+  btnBack.addEventListener("click", () => goTo(step - 1));
+  $("#slot-fallback").addEventListener("click", () => { slotOptOut = true; slotId = ""; setSlotMode(false); $("#f-availability").focus(); });
+  $("#slot-back").addEventListener("click", () => { slotOptOut = false; setSlotMode(true); });
+
+  /* ========== เริ่มต้น ========== */
+  loadDraft();
+  loadSlots();
+  updateChoices();
+  updateTesters();
+  updateQual();
+  goTo(0, false);
+})();
+</script>
+</body>
+</html>
