@@ -20,6 +20,16 @@ h1{margin:0 0 12px;font-size:26px;font-weight:900;line-height:1.35}
 label{display:block;margin-bottom:6px;font-weight:700}
 .input,.select{width:100%;font:inherit;font-size:16px;color:#fff;background:#0d0d0d;border:1.5px solid #333;border-radius:10px;padding:10px 12px}
 .select option{background:#111}
+.hint-sm{color:var(--muted);font-size:.85rem;margin:0 0 12px}
+.testers-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.testers-col h3{margin:0 0 8px;font-size:1rem}
+.t-row{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+.t-row label{min-width:2.8rem;font-weight:700}
+.t-row .input{flex:1;min-width:0;padding:8px 10px}
+.t-row .btn{white-space:nowrap}
+.t-row.saved .input{border-color:#3ddc84}
+.t-row.dirty .input{border-color:#ffb020}
+.tbl .testers-line{color:#fff;font-size:.85rem}
 .tbl small.tier-diff{color:#ffb020;font-weight:700}
 .input:focus-visible,.select:focus-visible{outline:none;border-color:var(--red-hot)}
 .btn{min-height:44px;padding:8px 16px;font:inherit;font-size:15px;font-weight:800;border-radius:10px;border:0;cursor:pointer;color:#fff}
@@ -73,6 +83,12 @@ label{display:block;margin-bottom:6px;font-weight:700}
         <button id="logout" type="button" class="btn btn-ghost">ออกจากระบบ</button>
       </div>
     </div>
+    <div class="slots-box" id="testers-box">
+      <h2>ผู้เทสประจำ tier</h2>
+      <p class="hint-sm">พิมพ์ชื่อผู้เทสของแต่ละ tier คั่นด้วยเครื่องหมายจุลภาค (,) แล้วกด <strong>บันทึก</strong> จะจำไว้ใช้ต่อและแสดงในตารางใบสมัคร แก้ไขได้ตลอด เว้นว่างแล้วบันทึกเพื่อล้างรายชื่อ</p>
+      <div id="testers-grid" class="testers-grid"></div>
+      <p id="testers-msg" class="ok-msg" role="status" hidden></p>
+    </div>
     <div class="slots-box">
       <h2>รอบทดสอบ (เวลาไทย GMT+7)</h2>
       <form id="slot-form" class="slot-form" autocomplete="off">
@@ -101,7 +117,7 @@ label{display:block;margin-bottom:6px;font-weight:700}
     <div class="tbl-wrap">
       <table class="tbl">
         <thead>
-          <tr><th>วันที่ / รหัส</th><th>ผู้เล่น</th><th>แรงค์</th><th>สาย / tier ที่เลือก</th><th>Tier (ระบบแนะนำ / แอดมินปรับ)</th><th>ติดต่อ</th><th>รอบทดสอบ / เวลาสะดวก</th><th>หมายเหตุ</th><th>สถานะ</th><th></th></tr>
+          <tr><th>วันที่ / รหัส</th><th>ผู้เล่น</th><th>แรงค์</th><th>สาย / tier ที่เลือก</th><th>Tier (ระบบแนะนำ / แอดมินปรับ)</th><th>ผู้เทส</th><th>ติดต่อ</th><th>รอบทดสอบ / เวลาสะดวก</th><th>หมายเหตุ</th><th>สถานะ</th><th></th></tr>
         </thead>
         <tbody id="rows"></tbody>
       </table>
@@ -207,6 +223,7 @@ label{display:block;margin-bottom:6px;font-weight:700}
           el("br"),
           el("small", { class: it.tierSuggested !== effTier(it) ? "tier-diff" : "" },
             `ระบบแนะนำ: ${it.tierSuggested}`, it.tierSuggested !== effTier(it) ? " (ต่างจากที่ใช้อยู่)" : "")),
+        el("td", { class: "testers-line" }, testersFor(it).join(", ") || el("small", {}, "ยังไม่ได้ตั้งผู้เทส")),
         el("td", {}, contactNode("Instagram", it.instagram, "ig"), it.instagram && it.messenger ? el("br") : "", contactNode("Messenger", it.messenger, "msg")),
         el("td", {}, it.slotStart ? el("strong", {}, fmtSlot(it.slotStart)) : it.slotCancelled ? "รอบที่จองถูกยกเลิก (รอนัดใหม่)" : it.preferredAt ? fmtSlot(it.preferredAt) : AVAIL[it.availability] || "-"),
         el("td", { class: "note" }, it.note || "-"),
@@ -214,7 +231,7 @@ label{display:block;margin-bottom:6px;font-weight:700}
         el("td", {}, del),
       );
     });
-    $("#rows").replaceChildren(...(rows.length ? rows : [el("tr", {}, el("td", { colspan: "10", class: "empty" }, "ไม่มีข้อมูล"))]));
+    $("#rows").replaceChildren(...(rows.length ? rows : [el("tr", {}, el("td", { colspan: "11", class: "empty" }, "ไม่มีข้อมูล"))]));
   }
 
   async function mutate(method, body, apply) {
@@ -231,6 +248,49 @@ label{display:block;margin-bottom:6px;font-weight:700}
       render();
       showMsg(e.message || "บันทึกไม่สำเร็จ กรุณาลองใหม่");
     }
+  }
+
+
+  /* ========== ผู้เทสประจำ tier ========== */
+  const TRACK_KEYS = ["LEAGUE", "HIGHLIGHTS"];
+  const splitNames = (t) => t.split(/[,\n]/).map((x) => x.trim()).filter(Boolean);
+  let testers = {}; // { "LEAGUE|SS": ["ปาย","น้อต"] }
+  const tKey = (track, tier) => `${track}|${tier}`;
+  const testersFor = (it) => testers[tKey(it.track, effTier(it))] || [];
+  const showTestersMsg = (m, bad) => { const e = $("#testers-msg"); e.textContent = m; e.hidden = !m; e.style.color = bad ? "#ff8a8a" : ""; };
+
+  async function loadTesters() {
+    const r = await api("GET", null, "/api/admin?what=testers");
+    if (r.status === 401) return logout();
+    testers = {};
+    if (r.ok && Array.isArray(r.data.testers)) for (const t of r.data.testers) testers[tKey(t.track, t.tier)] = t.names;
+    renderTesters();
+    render();
+  }
+
+  function renderTesters() {
+    $("#testers-grid").replaceChildren(...TRACK_KEYS.map((track) => el("div", { class: "testers-col" },
+      el("h3", {}, TRACK[track]),
+      TIERS.map((tier) => {
+        const saved = testers[tKey(track, tier)] || [];
+        const inp = el("input", { class: "input", type: "text", maxlength: "400", placeholder: "เช่น ปาย, น้อต", "aria-label": `ผู้เทส ${TRACK[track]} ${tier}`, value: saved.join(", ") });
+        const row = el("div", { class: "t-row" }, el("label", {}, tier), inp);
+        const btn = el("button", { class: "btn btn-ghost btn-sm", type: "button" }, "บันทึก");
+        inp.addEventListener("input", () => row.classList.toggle("dirty", splitNames(inp.value).join("|") !== saved.join("|")));
+        btn.addEventListener("click", async () => {
+          btn.disabled = true;
+          const r = await api("PUT", { track, tier, names: splitNames(inp.value) }, "/api/admin?what=testers");
+          btn.disabled = false;
+          if (r.status === 401) return logout();
+          if (!r.ok) return showTestersMsg(r.data.error || "บันทึกไม่สำเร็จ", true);
+          testers[tKey(track, tier)] = r.data.names;
+          showTestersMsg(`บันทึกผู้เทส ${TRACK[track]} ${tier} แล้ว`);
+          renderTesters(); // รีเฟรชช่องกรอก (ชื่อที่ซ้ำ/ว่างถูกเก็บกวาดแล้ว)
+          render();        // อัปเดตตารางใบสมัคร
+        });
+        row.append(btn);
+        return row;
+      }))));
   }
 
   /* ========== รอบทดสอบ ========== */
@@ -308,11 +368,11 @@ label{display:block;margin-bottom:6px;font-weight:700}
   }
 
   /* ===== ส่งออก Excel (.xlsx) จริง สร้างในเบราว์เซอร์ ไม่ต้องพึ่งไลบรารี (ZIP แบบ store + XML) ===== */
-  const XL_HEAD = ["รหัส", "วันที่", "ชื่อในเกม", "UID", "เลเวล", "แรงค์ BR", "แรงค์ CS", "สาย", "Tier ที่เลือก", "Tier ที่แอดมินปรับ", "Tier ระบบแนะนำ", "Instagram", "Messenger", "เวลาสะดวก", "รอบทดสอบ", "หมายเหตุ", "สถานะ"];
+  const XL_HEAD = ["รหัส", "วันที่", "ชื่อในเกม", "UID", "เลเวล", "แรงค์ BR", "แรงค์ CS", "สาย", "Tier ที่เลือก", "Tier ที่แอดมินปรับ", "Tier ระบบแนะนำ", "ผู้เทส", "Instagram", "Messenger", "เวลาสะดวก", "รอบทดสอบ", "หมายเหตุ", "สถานะ"];
   function xlRows() {
     return items.map((it) => [
       it.ref, new Date(it.createdAt).toLocaleString("th-TH"), it.ign, it.uid, it.level, it.rankBR, it.rankCS,
-      TRACK[it.track] || it.track, it.tier, it.tierAdmin || "", it.tierSuggested, it.instagram, it.messenger,
+      TRACK[it.track] || it.track, it.tier, it.tierAdmin || "", it.tierSuggested, testersFor(it).join(", "), it.instagram, it.messenger,
       (it.preferredAt ? fmtSlot(it.preferredAt) : AVAIL[it.availability] || ""), it.slotStart ? fmtSlot(it.slotStart) : "", it.note, STATUS[it.status] || it.status,
     ]);
   }
@@ -348,7 +408,7 @@ label{display:block;margin-bottom:6px;font-weight:700}
       // ทุกเซลล์เป็นข้อความ (inlineStr) → Excel ไม่ตีความเป็นสูตร และ UID ไม่ถูกตัดเลขศูนย์/แปลงเป็น 1E+10
       return `<c r="${ref}" t="inlineStr"${ri === 0 ? ' s="1"' : ""}><is><t xml:space="preserve">${xmlEsc(v)}</t></is></c>`;
     }).join("") + "</row>").join("");
-    const widths = [14, 20, 18, 14, 8, 14, 14, 16, 12, 14, 14, 30, 34, 20, 30, 40, 14];
+    const widths = [14, 20, 18, 14, 8, 14, 14, 16, 12, 14, 14, 24, 30, 34, 20, 30, 40, 14];
     const cols = widths.map((w, i) => `<col min="${i + 1}" max="${i + 1}" width="${w}" customWidth="1"/>`).join("");
     const files = [
       ["[Content_Types].xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>`],
@@ -370,10 +430,10 @@ label{display:block;margin-bottom:6px;font-weight:700}
       if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;
       return '"' + s.replace(/"/g, '""') + '"';
     };
-    const head = ["รหัส", "วันที่", "ชื่อในเกม", "UID", "เลเวล", "แรงค์ BR", "แรงค์ CS", "สาย", "Tier ที่เลือก", "Tier ที่แอดมินปรับ", "Tier ระบบแนะนำ", "Instagram", "Messenger", "เวลาสะดวก", "รอบทดสอบ", "หมายเหตุ", "สถานะ"];
+    const head = ["รหัส", "วันที่", "ชื่อในเกม", "UID", "เลเวล", "แรงค์ BR", "แรงค์ CS", "สาย", "Tier ที่เลือก", "Tier ที่แอดมินปรับ", "Tier ระบบแนะนำ", "ผู้เทส", "Instagram", "Messenger", "เวลาสะดวก", "รอบทดสอบ", "หมายเหตุ", "สถานะ"];
     const lines = items.map((it) => [
       it.ref, new Date(it.createdAt).toLocaleString("th-TH"), it.ign, it.uid, it.level, it.rankBR, it.rankCS,
-      TRACK[it.track] || it.track, it.tier, it.tierAdmin || "", it.tierSuggested, it.instagram, it.messenger,
+      TRACK[it.track] || it.track, it.tier, it.tierAdmin || "", it.tierSuggested, testersFor(it).join(", "), it.instagram, it.messenger,
       (it.preferredAt ? fmtSlot(it.preferredAt) : AVAIL[it.availability] || ""), it.slotStart ? fmtSlot(it.slotStart) : "", it.note, STATUS[it.status] || it.status,
     ].map(cell).join(","));
     const blob = new Blob(["\uFEFF" + [head.map(cell).join(","), ...lines].join("\r\n")], { type: "text/csv;charset=utf-8" });
@@ -417,7 +477,7 @@ label{display:block;margin-bottom:6px;font-weight:700}
       return;
     }
     $("#pw").value = "";
-    loadSlots();
+    loadSlots(); loadTesters();
     $("#login").hidden = true;
     $("#panel").hidden = false;
     bumpIdle();
@@ -427,7 +487,7 @@ label{display:block;margin-bottom:6px;font-weight:700}
     showMsg("");
     const r = await load();
     if (!r.ok) { if (r.status === 401) logout(); else showMsg(r.error); }
-    else loadSlots();
+    else { loadSlots(); loadTesters(); }
   });
   $("#csv").addEventListener("click", exportCsv);
   $("#xlsx").addEventListener("click", exportXlsx);

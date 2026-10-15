@@ -1,5 +1,5 @@
 import {
-  sql, ensureSchema, redis, systemReady, STATUSES, TIERS, send, readJson,
+  sql, ensureSchema, redis, systemReady, STATUSES, TIERS, TRACKS, cleanNames, send, readJson,
   sameOrigin, rateLimit, ipKey, isAdmin, UUID_RE, appFromRow, RETENTION_DAYS,
 } from "./_lib.js";
 
@@ -9,8 +9,8 @@ const WINDOW = 600; // 10 นาที
 export default async function handler(req, res) {
   res.setHeader("X-Robots-Tag", "noindex, nofollow");
   const method = req.method;
-  if (!["GET", "PATCH", "DELETE"].includes(method)) {
-    res.setHeader("Allow", "GET, PATCH, DELETE");
+  if (!["GET", "PATCH", "PUT", "DELETE"].includes(method)) {
+    res.setHeader("Allow", "GET, PATCH, PUT, DELETE");
     return send(res, 405, { error: "Method not allowed" });
   }
 
@@ -33,6 +33,27 @@ export default async function handler(req, res) {
     }
 
     await ensureSchema();
+
+    const isTesters = String(req.url || "").includes("what=testers");
+
+    if (method === "GET" && isTesters) {
+      const rows = await sql`SELECT track, tier, names FROM tier_testers`;
+      return send(res, 200, { testers: rows.map((r) => ({ track: r.track, tier: r.tier, names: r.names || [] })) });
+    }
+
+    if (method === "PUT" && isTesters) {
+      // บันทึกรายชื่อผู้เทสของ (สาย, tier) หนึ่งช่อง แทนที่ทั้งรายการ; names ว่าง = ล้าง
+      const { body, error } = readJson(req, 2000);
+      if (error) return send(res, error[0], { error: error[1] });
+      if (!TRACKS.includes(body.track) || !TIERS.includes(body.tier)) return send(res, 400, { error: "ข้อมูลไม่ถูกต้อง" });
+      const names = cleanNames(body.names);
+      if (!names) return send(res, 422, { error: "รายชื่อไม่ถูกต้อง (สูงสุด 10 ชื่อ ชื่อละไม่เกิน 40 ตัวอักษร)" });
+      await sql`
+        INSERT INTO tier_testers (track, tier, names) VALUES (${body.track}, ${body.tier}, ${names}::text[])
+        ON CONFLICT (track, tier) DO UPDATE SET names = EXCLUDED.names, updated_at = now()`;
+      return send(res, 200, { ok: true, names });
+    }
+    if (method === "PUT") return send(res, 404, { error: "ไม่พบ" });
 
     if (method === "GET") {
       // ลบใบสมัครที่เก็บเกินกำหนด (แทน TTL ของ Redis เดิม)

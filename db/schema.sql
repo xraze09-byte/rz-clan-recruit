@@ -62,3 +62,12 @@ END $$;
 
 -- ฐานข้อมูลเดิม: เพิ่มคอลัมน์ tier ที่แอดมินปรับ
 ALTER TABLE applications ADD COLUMN IF NOT EXISTS tier_admin text CHECK (tier_admin IN ('God', 'SSS', 'SS', 'S'));
+
+-- รายชื่อผู้เทสประจำ tier (แอดมินกรอกเอง บันทึกไว้ใช้ต่อ) 1 แถว = 1 สาย + 1 tier
+CREATE TABLE IF NOT EXISTS tier_testers (
+  track      text        NOT NULL CHECK (track IN ('LEAGUE', 'HIGHLIGHTS')),
+  tier       text        NOT NULL CHECK (tier IN ('God', 'SSS', 'SS', 'S')),
+  names      text[]      NOT NULL DEFAULT '{}',
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  PRIMARY KEY (track, tier)
+);

@@ -45,6 +45,13 @@ export const SCHEMA = [
     END IF;
   END $$`,
   `ALTER TABLE applications ADD COLUMN IF NOT EXISTS tier_admin text CHECK (tier_admin IN ('God', 'SSS', 'SS', 'S'))`,
+  `CREATE TABLE IF NOT EXISTS tier_testers (
+    track      text        NOT NULL CHECK (track IN ('LEAGUE', 'HIGHLIGHTS')),
+    tier       text        NOT NULL CHECK (tier IN ('God', 'SSS', 'SS', 'S')),
+    names      text[]      NOT NULL DEFAULT '{}',
+    updated_at timestamptz NOT NULL DEFAULT now(),
+    PRIMARY KEY (track, tier)
+    )`,
   `CREATE INDEX IF NOT EXISTS applications_created_idx ON applications (created_at DESC)`,
   `CREATE INDEX IF NOT EXISTS applications_status_idx  ON applications (status)`,
   `CREATE INDEX IF NOT EXISTS applications_slot_idx    ON applications (slot_id) WHERE slot_id IS NOT NULL`,

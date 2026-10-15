@@ -57,6 +57,23 @@ export function appFromRow(r) {
 export const TRACKS = ["LEAGUE", "HIGHLIGHTS"];
 export const TIERS = ["God", "SSS", "SS", "S"];
 
+export const TESTER_MAX_NAMES = 10;
+export const TESTER_MAX_LEN = 40;
+/** แปลงข้อความรายชื่อ (คั่นด้วย , หรือขึ้นบรรทัดใหม่) เป็นอาร์เรย์ที่สะอาด: ตัดช่องว่าง ลบชื่อซ้ำ จำกัดจำนวน/ความยาว */
+export function cleanNames(input) {
+  const raw = Array.isArray(input) ? input : typeof input === "string" ? input.split(/[,\n]/) : null;
+  if (!raw) return null;
+  const out = [];
+  for (const x of raw) {
+    if (typeof x !== "string") return null;
+    const n = x.normalize("NFC").replace(/[\u0000-\u001f\u007f<>]/g, "").replace(/\s+/g, " ").trim();
+    if (!n) continue;
+    if (n.length > TESTER_MAX_LEN) return null;
+    if (!out.some((y) => y.toLowerCase() === n.toLowerCase())) out.push(n);
+  }
+  return out.length <= TESTER_MAX_NAMES ? out : null;
+}
+
 /*
  * ระบบแนะนำ tier จากข้อมูลผู้สมัคร (กฎร่างแรก — ปรับตัวเลขได้ที่นี่ที่เดียว)
  *   คะแนน = แต้มแรงค์ BR (1-7) + แต้มแรงค์ CS (1-7) + โบนัสเลเวล (0-4)
