@@ -21,7 +21,7 @@ label{display:block;margin-bottom:6px;font-weight:700}
 .input,.select{width:100%;font:inherit;font-size:16px;color:#fff;background:#0d0d0d;border:1.5px solid #333;border-radius:10px;padding:10px 12px}
 .select option{background:#111}
 .hint-sm{color:var(--muted);font-size:.85rem;margin:0 0 12px}
-.testers-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.testers-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:4px 16px}
 .testers-col h3{margin:0 0 8px;font-size:1rem}
 .t-row{display:flex;gap:8px;align-items:center;margin-bottom:8px}
 .t-row label{min-width:2.8rem;font-weight:700}
@@ -29,7 +29,12 @@ label{display:block;margin-bottom:6px;font-weight:700}
 .t-row .btn{white-space:nowrap}
 .t-row.saved .input{border-color:#3ddc84}
 .t-row.dirty .input{border-color:#ffb020}
-.tbl .testers-line{color:#fff;font-size:.85rem}
+.testers-cell{min-width:190px}
+.testers-cell .t-in{width:100%;padding:7px 9px;font-size:.85rem;margin-bottom:6px}
+.testers-cell .t-in.inherited{color:var(--muted);font-style:italic}
+.testers-cell .t-in.dirty{border-color:#ffb020}
+.testers-cell .t-actions{display:inline-block;margin-right:6px}
+.testers-cell small{display:block;margin-top:4px}
 .tbl small.tier-diff{color:#ffb020;font-weight:700}
 .input:focus-visible,.select:focus-visible{outline:none;border-color:var(--red-hot)}
 .btn{min-height:44px;padding:8px 16px;font:inherit;font-size:15px;font-weight:800;border-radius:10px;border:0;cursor:pointer;color:#fff}
@@ -84,8 +89,8 @@ label{display:block;margin-bottom:6px;font-weight:700}
       </div>
     </div>
     <div class="slots-box" id="testers-box">
-      <h2>ผู้เทสประจำ tier</h2>
-      <p class="hint-sm">พิมพ์ชื่อผู้เทสของแต่ละ tier คั่นด้วยเครื่องหมายจุลภาค (,) แล้วกด <strong>บันทึก</strong> จะจำไว้ใช้ต่อและแสดงในตารางใบสมัคร แก้ไขได้ตลอด เว้นว่างแล้วบันทึกเพื่อล้างรายชื่อ</p>
+      <h2>รายชื่อผู้เทสกลางของแต่ละ tier (ตัวเลือก)</h2>
+      <p class="hint-sm">ใช้เป็นค่าเริ่มต้นของทุกใบสมัครใน tier นั้น (ทุกสาย) พิมพ์ชื่อคั่นด้วย , แล้วกด <strong>บันทึก</strong> จะจำไว้ใช้ต่อ <strong>แต่ละใบสมัครแก้ผู้เทสของตัวเองได้ในตารางด้านล่าง</strong> และค่าที่ตั้งเองในใบสมัครจะไม่ถูกเปลี่ยนเมื่อแก้รายชื่อกลาง</p>
       <div id="testers-grid" class="testers-grid"></div>
       <p id="testers-msg" class="ok-msg" role="status" hidden></p>
     </div>
@@ -223,7 +228,7 @@ label{display:block;margin-bottom:6px;font-weight:700}
           el("br"),
           el("small", { class: it.tierSuggested !== effTier(it) ? "tier-diff" : "" },
             `ระบบแนะนำ: ${it.tierSuggested}`, it.tierSuggested !== effTier(it) ? " (ต่างจากที่ใช้อยู่)" : "")),
-        el("td", { class: "testers-line" }, testersFor(it).join(", ") || el("small", {}, "ยังไม่ได้ตั้งผู้เทส")),
+        testersCell(it),
         el("td", {}, contactNode("Instagram", it.instagram, "ig"), it.instagram && it.messenger ? el("br") : "", contactNode("Messenger", it.messenger, "msg")),
         el("td", {}, it.slotStart ? el("strong", {}, fmtSlot(it.slotStart)) : it.slotCancelled ? "รอบที่จองถูกยกเลิก (รอนัดใหม่)" : it.preferredAt ? fmtSlot(it.preferredAt) : AVAIL[it.availability] || "-"),
         el("td", { class: "note" }, it.note || "-"),
@@ -251,47 +256,84 @@ label{display:block;margin-bottom:6px;font-weight:700}
   }
 
 
-  /* ========== ผู้เทสประจำ tier ========== */
-  const TRACK_KEYS = ["LEAGUE", "HIGHLIGHTS"];
+  /* ========== ผู้เทส ========== */
+  /* รายชื่อกลางต่อ tier (ทุกสาย) = ค่าเริ่มต้น; ใบสมัครแต่ละใบตั้งผู้เทสของตัวเองได้ (testersAdmin) และค่านั้นชนะเสมอ */
   const splitNames = (t) => t.split(/[,\n]/).map((x) => x.trim()).filter(Boolean);
-  let testers = {}; // { "LEAGUE|SS": ["ปาย","น้อต"] }
-  const tKey = (track, tier) => `${track}|${tier}`;
-  const testersFor = (it) => testers[tKey(it.track, effTier(it))] || [];
+  const CENTRAL_TRACK = "LEAGUE";
+  const drafts = new Map(); // id ใบสมัคร -> ข้อความผู้เทสที่พิมพ์ไว้แต่ยังไม่ได้กดบันทึก (กัน render ทับ)
+  let testers = {}; // { "SS": ["ปาย","น้อต"] }
+  const centralFor = (tier) => testers[tier] || [];
+  /** ผู้เทสที่ใช้จริงของใบสมัคร: ที่ตั้งไว้ในใบสมัคร (ถ้ามี) ไม่งั้นรายชื่อกลางของ tier ที่ใช้อยู่ */
+  const testersFor = (it) => Array.isArray(it.testersAdmin) ? it.testersAdmin : centralFor(effTier(it));
   const showTestersMsg = (m, bad) => { const e = $("#testers-msg"); e.textContent = m; e.hidden = !m; e.style.color = bad ? "#ff8a8a" : ""; };
 
   async function loadTesters() {
     const r = await api("GET", null, "/api/admin?what=testers");
     if (r.status === 401) return logout();
     testers = {};
-    if (r.ok && Array.isArray(r.data.testers)) for (const t of r.data.testers) testers[tKey(t.track, t.tier)] = t.names;
+    if (r.ok && Array.isArray(r.data.testers)) {
+      // รวมข้อมูลเก่าที่แยกสาย: ใช้ LEAGUE ก่อน ถ้าไม่มีใช้ HIGHLIGHTS
+      for (const t of r.data.testers) if (t.names.length && (t.track === CENTRAL_TRACK || !testers[t.tier])) testers[t.tier] = t.names;
+    }
     renderTesters();
     render();
   }
 
   function renderTesters() {
-    $("#testers-grid").replaceChildren(...TRACK_KEYS.map((track) => el("div", { class: "testers-col" },
-      el("h3", {}, TRACK[track]),
-      TIERS.map((tier) => {
-        const saved = testers[tKey(track, tier)] || [];
-        const inp = el("input", { class: "input", type: "text", maxlength: "400", placeholder: "เช่น ปาย, น้อต", "aria-label": `ผู้เทส ${TRACK[track]} ${tier}`, value: saved.join(", ") });
-        const row = el("div", { class: "t-row" }, el("label", {}, tier), inp);
-        const btn = el("button", { class: "btn btn-ghost btn-sm", type: "button" }, "บันทึก");
-        inp.addEventListener("input", () => row.classList.toggle("dirty", splitNames(inp.value).join("|") !== saved.join("|")));
-        btn.addEventListener("click", async () => {
-          btn.disabled = true;
-          const r = await api("PUT", { track, tier, names: splitNames(inp.value) }, "/api/admin?what=testers");
-          btn.disabled = false;
-          if (r.status === 401) return logout();
-          if (!r.ok) return showTestersMsg(r.data.error || "บันทึกไม่สำเร็จ", true);
-          testers[tKey(track, tier)] = r.data.names;
-          showTestersMsg(`บันทึกผู้เทส ${TRACK[track]} ${tier} แล้ว`);
-          renderTesters(); // รีเฟรชช่องกรอก (ชื่อที่ซ้ำ/ว่างถูกเก็บกวาดแล้ว)
-          render();        // อัปเดตตารางใบสมัคร
-        });
-        row.append(btn);
-        return row;
-      }))));
+    $("#testers-grid").replaceChildren(...TIERS.map((tier) => {
+      const saved = centralFor(tier);
+      const inp = el("input", { class: "input", type: "text", maxlength: "400", placeholder: "เช่น ปาย, น้อต", "aria-label": `รายชื่อกลาง ${tier}`, value: saved.join(", ") });
+      const row = el("div", { class: "t-row" }, el("label", {}, tier), inp);
+      const btn = el("button", { class: "btn btn-ghost btn-sm", type: "button" }, "บันทึก");
+      inp.addEventListener("input", () => row.classList.toggle("dirty", splitNames(inp.value).join("|") !== saved.join("|")));
+      btn.addEventListener("click", async () => {
+        btn.disabled = true;
+        // เขียนทั้งสองสายให้เหมือนกัน เพื่อไม่ให้ค่าเก่าของสายอื่นค้างอยู่
+        const rs = await Promise.all(TRACK_KEYS_ALL.map((track) => api("PUT", { track, tier, names: splitNames(inp.value) }, "/api/admin?what=testers")));
+        btn.disabled = false;
+        if (rs.some((x) => x.status === 401)) return logout();
+        const bad = rs.find((x) => !x.ok);
+        if (bad) return showTestersMsg(bad.data.error || "บันทึกไม่สำเร็จ", true);
+        testers[tier] = rs[0].data.names;
+        showTestersMsg(`บันทึกรายชื่อกลาง ${tier} แล้ว (ใบสมัครที่ตั้งผู้เทสเองไว้ไม่เปลี่ยน)`);
+        renderTesters(); render();
+      });
+      row.append(btn);
+      return row;
+    }));
   }
+  const TRACK_KEYS_ALL = ["LEAGUE", "HIGHLIGHTS"];
+
+  /** เซลล์ผู้เทสในแถว: ช่องพิมพ์ + บันทึก (+ เติมจากรายชื่อกลาง / ใช้รายชื่อกลาง) */
+  function testersCell(it) {
+    const own = Array.isArray(it.testersAdmin);
+    const cur = testersFor(it);
+    const hasDraft = drafts.has(it.id);
+    const inp = el("input", { class: "input t-in" + (own || hasDraft ? "" : " inherited") + (hasDraft ? " dirty" : ""), type: "text", maxlength: "400", placeholder: "พิมพ์ชื่อผู้เทส คั่นด้วย ,", "aria-label": `ผู้เทสของ ${it.ign}`, value: hasDraft ? drafts.get(it.id) : cur.join(", ") });
+    const note = el("small", {}, own ? "ตั้งเองในใบสมัครนี้" : (cur.length ? `จากรายชื่อกลาง ${effTier(it)}` : "ยังไม่ได้ตั้งผู้เทส"));
+    const save = el("button", { class: "btn btn-ghost btn-sm", type: "button" }, "บันทึก");
+    inp.addEventListener("input", () => {
+      inp.classList.remove("inherited");
+      const changed = splitNames(inp.value).join("|") !== cur.join("|");
+      inp.classList.toggle("dirty", changed);
+      if (changed) drafts.set(it.id, inp.value); else drafts.delete(it.id);
+    });
+    const send = async (value, okMsg) => {
+      save.disabled = true;
+      const r = await api("PATCH", { id: it.id, testers: value });
+      save.disabled = false;
+      if (r.status === 401) return logout();
+      if (!r.ok) { note.textContent = r.data.error || "บันทึกไม่สำเร็จ"; note.style.color = "#ff8a8a"; return; }
+      it.testersAdmin = value === null ? null : cleanClient(value);
+      drafts.delete(it.id);
+      render();
+    };
+    save.addEventListener("click", () => send(splitNames(inp.value)));
+    const kids = [inp, el("div", { class: "t-actions" }, save), note];
+    if (own) kids.splice(2, 0, el("button", { class: "btn btn-ghost btn-sm", type: "button", title: "ล้างที่ตั้งเอง แล้วใช้รายชื่อกลางของ tier", onclick: () => send(null) }, "ใช้รายชื่อกลาง"));
+    return el("td", { class: "testers-cell" }, ...kids);
+  }
+  const cleanClient = (arr) => { const out = []; for (const n of arr) if (!out.some((y) => y.toLowerCase() === n.toLowerCase())) out.push(n); return out; };
 
   /* ========== รอบทดสอบ ========== */
   const fmtFull = new Intl.DateTimeFormat("th-TH", { timeZone: "Asia/Bangkok", dateStyle: "full", timeStyle: "short" });
@@ -445,6 +487,7 @@ label{display:block;margin-bottom:6px;font-weight:700}
   }
 
   function logout() {
+    drafts.clear();
     pw = "";
     items = [];
     slots = [];

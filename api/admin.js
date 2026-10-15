@@ -73,13 +73,24 @@ export default async function handler(req, res) {
     if (method === "PATCH") {
       const hasStatus = body.status !== undefined;
       const hasTier = body.tierAdmin !== undefined;
-      if (!hasStatus && !hasTier) return send(res, 400, { error: "ไม่มีข้อมูลที่จะแก้" });
+      const hasTesters = body.testers !== undefined;
+      if (!hasStatus && !hasTier && !hasTesters) return send(res, 400, { error: "ไม่มีข้อมูลที่จะแก้" });
 
       if (hasTier) {
         // tierAdmin: "" = ล้างค่า (กลับไปใช้ tier ที่ผู้สมัครเลือก) หรือ God/SSS/SS/S
         if (body.tierAdmin !== "" && !TIERS.includes(body.tierAdmin)) return send(res, 400, { error: "tier ไม่ถูกต้อง" });
         const t = body.tierAdmin === "" ? null : body.tierAdmin;
         const out = await sql`UPDATE applications SET tier_admin = ${t}, updated_at = now() WHERE id = ${id}::uuid RETURNING id`;
+        if (!out.length) return send(res, 404, { error: "ไม่พบใบสมัคร" });
+      }
+      if (hasTesters) {
+        // testers: null = ล้างค่า (กลับไปใช้รายชื่อกลางของ tier) | array/string = ตั้งรายชื่อของใบสมัครนี้ ([] = ไม่มีผู้เทส)
+        let names = null;
+        if (body.testers !== null) {
+          names = cleanNames(body.testers);
+          if (!names) return send(res, 422, { error: "รายชื่อไม่ถูกต้อง (สูงสุด 10 ชื่อ ชื่อละไม่เกิน 40 ตัวอักษร)" });
+        }
+        const out = await sql`UPDATE applications SET testers_admin = ${names}::text[], updated_at = now() WHERE id = ${id}::uuid RETURNING id`;
         if (!out.length) return send(res, 404, { error: "ไม่พบใบสมัคร" });
       }
       if (hasStatus) {

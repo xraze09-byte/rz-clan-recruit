@@ -45,7 +45,7 @@ export function appFromRow(r) {
   return {
     id: r.id, ref: r.ref, ign: r.ign, uid: r.uid, level: r.level,
     rankBR: r.rank_br, rankCS: r.rank_cs, track: r.track, tier: r.tier,
-    tierAdmin: r.tier_admin || "", tierSuggested: suggestTier(r.rank_br, r.rank_cs, r.level),
+    tierAdmin: r.tier_admin || "", testersAdmin: Array.isArray(r.testers_admin) ? r.testers_admin : null, tierSuggested: suggestTier(r.rank_br, r.rank_cs, r.level),
     instagram: r.instagram, messenger: r.messenger,
     availability: r.availability, preferredAt: iso(r.preferred_at), note: r.note, status: r.status,
     slotId: r.slot_id || "", slotStart: iso(r.slot_start), slotCancelled: Boolean(r.slot_cancelled),

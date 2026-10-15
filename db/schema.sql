@@ -71,3 +71,5 @@ CREATE TABLE IF NOT EXISTS tier_testers (
   updated_at timestamptz NOT NULL DEFAULT now(),
   PRIMARY KEY (track, tier)
 );
+-- ผู้เทสของใบสมัครนี้ (แอดมินกรอก) NULL = ยังไม่ตั้งเอง ใช้รายชื่อกลางของ tier แทน, {} = ตั้งใจให้ไม่มีผู้เทส
+ALTER TABLE applications ADD COLUMN IF NOT EXISTS testers_admin text[];

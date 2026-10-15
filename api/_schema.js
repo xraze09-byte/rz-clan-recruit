@@ -45,6 +45,7 @@ export const SCHEMA = [
     END IF;
   END $$`,
   `ALTER TABLE applications ADD COLUMN IF NOT EXISTS tier_admin text CHECK (tier_admin IN ('God', 'SSS', 'SS', 'S'))`,
+  `ALTER TABLE applications ADD COLUMN IF NOT EXISTS testers_admin text[]`,
   `CREATE TABLE IF NOT EXISTS tier_testers (
     track      text        NOT NULL CHECK (track IN ('LEAGUE', 'HIGHLIGHTS')),
     tier       text        NOT NULL CHECK (tier IN ('God', 'SSS', 'SS', 'S')),
