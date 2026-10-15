@@ -20,6 +20,7 @@ h1{margin:0 0 12px;font-size:26px;font-weight:900;line-height:1.35}
 label{display:block;margin-bottom:6px;font-weight:700}
 .input,.select{width:100%;font:inherit;font-size:16px;color:#fff;background:#0d0d0d;border:1.5px solid #333;border-radius:10px;padding:10px 12px}
 .select option{background:#111}
+.tbl small.tier-diff{color:#ffb020;font-weight:700}
 .input:focus-visible,.select:focus-visible{outline:none;border-color:var(--red-hot)}
 .btn{min-height:44px;padding:8px 16px;font:inherit;font-size:15px;font-weight:800;border-radius:10px;border:0;cursor:pointer;color:#fff}
 .btn-primary{width:100%;margin-top:16px;background:linear-gradient(180deg,#ff2a2a,#b00000)}
@@ -100,7 +101,7 @@ label{display:block;margin-bottom:6px;font-weight:700}
     <div class="tbl-wrap">
       <table class="tbl">
         <thead>
-          <tr><th>วันที่ / รหัส</th><th>ผู้เล่น</th><th>แรงค์</th><th>สาย / ระดับ</th><th>ผู้ทดสอบ</th><th>ติดต่อ</th><th>รอบทดสอบ / เวลาสะดวก</th><th>หมายเหตุ</th><th>สถานะ</th><th></th></tr>
+          <tr><th>วันที่ / รหัส</th><th>ผู้เล่น</th><th>แรงค์</th><th>สาย / tier ที่เลือก</th><th>Tier (ระบบแนะนำ / แอดมินปรับ)</th><th>ติดต่อ</th><th>รอบทดสอบ / เวลาสะดวก</th><th>หมายเหตุ</th><th>สถานะ</th><th></th></tr>
         </thead>
         <tbody id="rows"></tbody>
       </table>
@@ -114,6 +115,9 @@ label{display:block;margin-bottom:6px;font-weight:700}
   const STATUS = { pending: "รอตรวจ", testing: "นัดทดสอบแล้ว", approved: "ผ่าน", rejected: "ไม่ผ่าน" };
   const TRACK = { LEAGUE: "TIER LEAGUE", HIGHLIGHTS: "TIER HIGHLIGHTS" };
   const AVAIL = { weekday_evening: "วันธรรมดา ช่วงเย็น", weekday_night: "วันธรรมดา ช่วงดึก", weekend: "เสาร์–อาทิตย์", anytime: "ได้ทุกช่วงเวลา" };
+  const TIERS = ["God", "SSS", "SS", "S"];
+  /** tier ที่ใช้จริง: แอดมินปรับแล้วใช้ค่านั้น ไม่งั้นใช้ที่ผู้สมัครเลือก */
+  const effTier = (it) => it.tierAdmin || it.tier;
   const IDLE_MS = 30 * 60 * 1000;
   const $ = (s) => document.querySelector(s);
 
@@ -178,6 +182,14 @@ label{display:block;margin-bottom:6px;font-weight:700}
         const status = sel.value;
         mutate("PATCH", { id: it.id, status }, (l) => l.map((x) => (x.id === it.id ? { ...x, status } : x)));
       });
+      const tierSel = el("select", { class: "select", "aria-label": "ปรับ tier" },
+        el("option", { value: "" }, `ตามที่เลือก (${it.tier})`),
+        TIERS.map((t) => el("option", { value: t }, t)));
+      tierSel.value = it.tierAdmin || "";
+      tierSel.addEventListener("change", () => {
+        const tierAdmin = tierSel.value;
+        mutate("PATCH", { id: it.id, tierAdmin }, (l) => l.map((x) => (x.id === it.id ? { ...x, tierAdmin } : x)));
+      });
       const del = el("button", {
         class: "btn btn-ghost btn-sm", type: "button",
         onclick: () => {
@@ -191,7 +203,10 @@ label{display:block;margin-bottom:6px;font-weight:700}
         el("td", {}, el("strong", {}, it.ign), el("br"), el("small", {}, `UID ${it.uid} • Lv ${it.level}`)),
         el("td", {}, `BR ${it.rankBR}`, el("br"), `CS ${it.rankCS}`),
         el("td", {}, TRACK[it.track] || it.track, el("br"), el("strong", {}, it.tier)),
-        el("td", {}, (it.testers || []).join(", ")),
+        el("td", {}, tierSel,
+          el("br"),
+          el("small", { class: it.tierSuggested !== effTier(it) ? "tier-diff" : "" },
+            `ระบบแนะนำ: ${it.tierSuggested}`, it.tierSuggested !== effTier(it) ? " (ต่างจากที่ใช้อยู่)" : "")),
         el("td", {}, contactNode("Instagram", it.instagram, "ig"), it.instagram && it.messenger ? el("br") : "", contactNode("Messenger", it.messenger, "msg")),
         el("td", {}, it.slotStart ? el("strong", {}, fmtSlot(it.slotStart)) : it.slotCancelled ? "รอบที่จองถูกยกเลิก (รอนัดใหม่)" : it.preferredAt ? fmtSlot(it.preferredAt) : AVAIL[it.availability] || "-"),
         el("td", { class: "note" }, it.note || "-"),
@@ -293,11 +308,11 @@ label{display:block;margin-bottom:6px;font-weight:700}
   }
 
   /* ===== ส่งออก Excel (.xlsx) จริง สร้างในเบราว์เซอร์ ไม่ต้องพึ่งไลบรารี (ZIP แบบ store + XML) ===== */
-  const XL_HEAD = ["รหัส", "วันที่", "ชื่อในเกม", "UID", "เลเวล", "แรงค์ BR", "แรงค์ CS", "สาย", "ระดับ", "ผู้ทดสอบ", "Instagram", "Messenger", "เวลาสะดวก", "รอบทดสอบ", "หมายเหตุ", "สถานะ"];
+  const XL_HEAD = ["รหัส", "วันที่", "ชื่อในเกม", "UID", "เลเวล", "แรงค์ BR", "แรงค์ CS", "สาย", "Tier ที่เลือก", "Tier ที่แอดมินปรับ", "Tier ระบบแนะนำ", "Instagram", "Messenger", "เวลาสะดวก", "รอบทดสอบ", "หมายเหตุ", "สถานะ"];
   function xlRows() {
     return items.map((it) => [
       it.ref, new Date(it.createdAt).toLocaleString("th-TH"), it.ign, it.uid, it.level, it.rankBR, it.rankCS,
-      TRACK[it.track] || it.track, it.tier, (it.testers || []).join(", "), it.instagram, it.messenger,
+      TRACK[it.track] || it.track, it.tier, it.tierAdmin || "", it.tierSuggested, it.instagram, it.messenger,
       (it.preferredAt ? fmtSlot(it.preferredAt) : AVAIL[it.availability] || ""), it.slotStart ? fmtSlot(it.slotStart) : "", it.note, STATUS[it.status] || it.status,
     ]);
   }
@@ -333,7 +348,7 @@ label{display:block;margin-bottom:6px;font-weight:700}
       // ทุกเซลล์เป็นข้อความ (inlineStr) → Excel ไม่ตีความเป็นสูตร และ UID ไม่ถูกตัดเลขศูนย์/แปลงเป็น 1E+10
       return `<c r="${ref}" t="inlineStr"${ri === 0 ? ' s="1"' : ""}><is><t xml:space="preserve">${xmlEsc(v)}</t></is></c>`;
     }).join("") + "</row>").join("");
-    const widths = [14, 20, 18, 14, 8, 14, 14, 16, 8, 18, 30, 34, 20, 30, 40, 14];
+    const widths = [14, 20, 18, 14, 8, 14, 14, 16, 12, 14, 14, 30, 34, 20, 30, 40, 14];
     const cols = widths.map((w, i) => `<col min="${i + 1}" max="${i + 1}" width="${w}" customWidth="1"/>`).join("");
     const files = [
       ["[Content_Types].xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>`],
@@ -355,10 +370,10 @@ label{display:block;margin-bottom:6px;font-weight:700}
       if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;
       return '"' + s.replace(/"/g, '""') + '"';
     };
-    const head = ["รหัส", "วันที่", "ชื่อในเกม", "UID", "เลเวล", "แรงค์ BR", "แรงค์ CS", "สาย", "ระดับ", "ผู้ทดสอบ", "Instagram", "Messenger", "เวลาสะดวก", "รอบทดสอบ", "หมายเหตุ", "สถานะ"];
+    const head = ["รหัส", "วันที่", "ชื่อในเกม", "UID", "เลเวล", "แรงค์ BR", "แรงค์ CS", "สาย", "Tier ที่เลือก", "Tier ที่แอดมินปรับ", "Tier ระบบแนะนำ", "Instagram", "Messenger", "เวลาสะดวก", "รอบทดสอบ", "หมายเหตุ", "สถานะ"];
     const lines = items.map((it) => [
       it.ref, new Date(it.createdAt).toLocaleString("th-TH"), it.ign, it.uid, it.level, it.rankBR, it.rankCS,
-      TRACK[it.track] || it.track, it.tier, (it.testers || []).join(", "), it.instagram, it.messenger,
+      TRACK[it.track] || it.track, it.tier, it.tierAdmin || "", it.tierSuggested, it.instagram, it.messenger,
       (it.preferredAt ? fmtSlot(it.preferredAt) : AVAIL[it.availability] || ""), it.slotStart ? fmtSlot(it.slotStart) : "", it.note, STATUS[it.status] || it.status,
     ].map(cell).join(","));
     const blob = new Blob(["\uFEFF" + [head.map(cell).join(","), ...lines].join("\r\n")], { type: "text/csv;charset=utf-8" });

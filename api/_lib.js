@@ -45,7 +45,8 @@ export function appFromRow(r) {
   return {
     id: r.id, ref: r.ref, ign: r.ign, uid: r.uid, level: r.level,
     rankBR: r.rank_br, rankCS: r.rank_cs, track: r.track, tier: r.tier,
-    testers: r.testers || [], instagram: r.instagram, messenger: r.messenger,
+    tierAdmin: r.tier_admin || "", tierSuggested: suggestTier(r.rank_br, r.rank_cs, r.level),
+    instagram: r.instagram, messenger: r.messenger,
     availability: r.availability, preferredAt: iso(r.preferred_at), note: r.note, status: r.status,
     slotId: r.slot_id || "", slotStart: iso(r.slot_start), slotCancelled: Boolean(r.slot_cancelled),
     createdAt: iso(r.created_at),
@@ -53,11 +54,29 @@ export function appFromRow(r) {
 }
 
 /* ===== ข้อมูล (ต้องตรงกับ index.html) ===== */
-export const TIER_TABLE = {
-  LEAGUE: { God: ["ฟลุ๊ค"], SSS: ["กัน"], SS: ["ปาย", "น้อต"], S: ["ปั้น", "โต้", "เกล้า"] },
-  HIGHLIGHTS: { God: ["เกล้า"], SSS: ["กัน", "น้อต"], SS: ["ฟลุ๊ค", "ปั้น"], S: ["โต้", "ปาย"] },
-};
+export const TRACKS = ["LEAGUE", "HIGHLIGHTS"];
 export const TIERS = ["God", "SSS", "SS", "S"];
+
+/*
+ * ระบบแนะนำ tier จากข้อมูลผู้สมัคร (กฎร่างแรก — ปรับตัวเลขได้ที่นี่ที่เดียว)
+ *   คะแนน = แต้มแรงค์ BR (1-7) + แต้มแรงค์ CS (1-7) + โบนัสเลเวล (0-4)
+ *   แรงค์: Diamond 4=1, Diamond 3=2, Diamond 2=3, Diamond 1=4, Heroic=5, Master=6, Grandmaster=7
+ *   โบนัสเลเวล: <50 = 0, 50-59 = 1, 60-69 = 2, 70-79 = 3, 80+ = 4
+ *   tier:  >=16 God | >=13 SSS | >=10 SS | น้อยกว่านั้น S
+ * เป็นเพียง "คำแนะนำ" ให้แอดมินดู ไม่ได้เปลี่ยน tier ของใครอัตโนมัติ
+ */
+const RANK_POINTS = { "Diamond 4": 1, "Diamond 3": 2, "Diamond 2": 3, "Diamond 1": 4, Heroic: 5, Master: 6, Grandmaster: 7 };
+export const TIER_CUTOFFS = [["God", 16], ["SSS", 13], ["SS", 10]]; // ต่ำกว่าทั้งหมด = S
+export function tierScore(rankBR, rankCS, level) {
+  const lv = Number(level) || 0;
+  const bonus = lv >= 80 ? 4 : lv >= 70 ? 3 : lv >= 60 ? 2 : lv >= 50 ? 1 : 0;
+  return (RANK_POINTS[rankBR] || 0) + (RANK_POINTS[rankCS] || 0) + bonus;
+}
+export function suggestTier(rankBR, rankCS, level) {
+  const sc = tierScore(rankBR, rankCS, level);
+  for (const [t, min] of TIER_CUTOFFS) if (sc >= min) return t;
+  return "S";
+}
 export const RANKS = ["Diamond 1", "Diamond 2", "Diamond 3", "Diamond 4", "Heroic", "Master", "Grandmaster"];
 export const AVAIL = { weekday_evening: "วันธรรมดา ช่วงเย็น", weekday_night: "วันธรรมดา ช่วงดึก", weekend: "เสาร์–อาทิตย์", anytime: "ได้ทุกช่วงเวลา" };
 export const STATUSES = ["pending", "testing", "approved", "rejected"];
@@ -184,7 +203,7 @@ export function validateApplication(b) {
 
   if (!RANKS.includes(d.rankBR)) e.rankBR = "แรงค์ BR ต้อง Diamond 1 ขึ้นไป";
   if (!RANKS.includes(d.rankCS)) e.rankCS = "แรงค์ CS ต้อง Diamond 1 ขึ้นไป";
-  if (!has(TIER_TABLE, d.track)) e.track = "เลือกสายที่ต้องการสมัคร";
+  if (!TRACKS.includes(d.track)) e.track = "เลือกสายที่ต้องการสมัคร";
   if (!TIERS.includes(d.tier)) e.tier = "เลือกระดับความยาก";
 
   if (d.instagram && !IG_RE.test(d.instagram)) e.instagram = "Instagram ไม่ถูกต้อง";

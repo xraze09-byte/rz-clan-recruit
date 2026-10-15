@@ -1,5 +1,5 @@
 import {
-  sql, ensureSchema, redis, systemReady, STATUSES, send, readJson,
+  sql, ensureSchema, redis, systemReady, STATUSES, TIERS, send, readJson,
   sameOrigin, rateLimit, ipKey, isAdmin, UUID_RE, appFromRow, RETENTION_DAYS,
 } from "./_lib.js";
 
@@ -50,16 +50,29 @@ export default async function handler(req, res) {
     if (!id) return send(res, 400, { error: "ข้อมูลไม่ถูกต้อง" });
 
     if (method === "PATCH") {
-      if (!STATUSES.includes(body.status)) return send(res, 400, { error: "สถานะไม่ถูกต้อง" });
-      // ไม่ผ่าน → คืนที่นั่งในรอบทดสอบ (slot_id = NULL) ในคำสั่งเดียว
-      const out = await sql`
-        UPDATE applications
-        SET status = ${body.status},
-            slot_id = CASE WHEN ${body.status} = 'rejected' THEN NULL ELSE slot_id END,
-            updated_at = now()
-        WHERE id = ${id}::uuid
-        RETURNING id`;
-      if (!out.length) return send(res, 404, { error: "ไม่พบใบสมัคร" });
+      const hasStatus = body.status !== undefined;
+      const hasTier = body.tierAdmin !== undefined;
+      if (!hasStatus && !hasTier) return send(res, 400, { error: "ไม่มีข้อมูลที่จะแก้" });
+
+      if (hasTier) {
+        // tierAdmin: "" = ล้างค่า (กลับไปใช้ tier ที่ผู้สมัครเลือก) หรือ God/SSS/SS/S
+        if (body.tierAdmin !== "" && !TIERS.includes(body.tierAdmin)) return send(res, 400, { error: "tier ไม่ถูกต้อง" });
+        const t = body.tierAdmin === "" ? null : body.tierAdmin;
+        const out = await sql`UPDATE applications SET tier_admin = ${t}, updated_at = now() WHERE id = ${id}::uuid RETURNING id`;
+        if (!out.length) return send(res, 404, { error: "ไม่พบใบสมัคร" });
+      }
+      if (hasStatus) {
+        if (!STATUSES.includes(body.status)) return send(res, 400, { error: "สถานะไม่ถูกต้อง" });
+        // ไม่ผ่าน → คืนที่นั่งในรอบทดสอบ (slot_id = NULL) ในคำสั่งเดียว
+        const out = await sql`
+          UPDATE applications
+          SET status = ${body.status},
+              slot_id = CASE WHEN ${body.status} = 'rejected' THEN NULL ELSE slot_id END,
+              updated_at = now()
+          WHERE id = ${id}::uuid
+          RETURNING id`;
+        if (!out.length) return send(res, 404, { error: "ไม่พบใบสมัคร" });
+      }
       return send(res, 200, { ok: true });
     }
 

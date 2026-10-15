@@ -19,8 +19,8 @@ CREATE TABLE IF NOT EXISTS applications (
   rank_br       text        NOT NULL,
   rank_cs       text        NOT NULL,
   track         text        NOT NULL CHECK (track IN ('LEAGUE', 'HIGHLIGHTS')),
-  tier          text        NOT NULL CHECK (tier IN ('God', 'SSS', 'SS', 'S')),
-  testers       text[]      NOT NULL DEFAULT '{}',
+  tier          text        NOT NULL CHECK (tier IN ('God', 'SSS', 'SS', 'S')),   -- tier ที่ผู้สมัครเลือกเอง
+  tier_admin    text        CHECK (tier_admin IN ('God', 'SSS', 'SS', 'S')),      -- tier ที่แอดมินปรับทีหลัง (NULL = ยังไม่ปรับ)
   instagram     text        NOT NULL DEFAULT '',   -- ชื่อหรือลิงก์ Instagram
   messenger     text        NOT NULL DEFAULT '',   -- ชื่อหรือลิงก์ Facebook Messenger
   availability  text        NOT NULL DEFAULT '',
@@ -51,3 +51,14 @@ END $$;
 
 -- ฐานข้อมูลเดิม: เพิ่มคอลัมน์วัน+เวลาที่สะดวก
 ALTER TABLE applications ADD COLUMN IF NOT EXISTS preferred_at timestamptz;
+
+-- เวอร์ชันที่เอา "ผู้ทดสอบ" ออก: ฐานข้อมูลเดิมที่มีคอลัมน์ testers ให้ยกเลิกข้อบังคับ NOT NULL (ข้อมูลเดิมยังอยู่ ไม่ถูกลบ)
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='applications' AND column_name='testers') THEN
+    ALTER TABLE applications ALTER COLUMN testers DROP NOT NULL;
+  END IF;
+END $$;
+
+-- ฐานข้อมูลเดิม: เพิ่มคอลัมน์ tier ที่แอดมินปรับ
+ALTER TABLE applications ADD COLUMN IF NOT EXISTS tier_admin text CHECK (tier_admin IN ('God', 'SSS', 'SS', 'S'));

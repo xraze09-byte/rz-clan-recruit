@@ -200,10 +200,10 @@ a{color:inherit}
             <fieldset class="field">
               <legend class="label">เลือกระดับความยาก <span class="req">*</span></legend>
               <div class="choice-grid">
-                <label class="choice"><input type="radio" name="tier" value="God" id="f-tier"><span class="mini-badge mb-God">God</span><span class="choice-sub" data-testers="God">เลือกสายก่อนเพื่อดูผู้ทดสอบ</span></label>
-                <label class="choice"><input type="radio" name="tier" value="SSS"><span class="mini-badge mb-SSS">SSS</span><span class="choice-sub" data-testers="SSS">เลือกสายก่อนเพื่อดูผู้ทดสอบ</span></label>
-                <label class="choice"><input type="radio" name="tier" value="SS"><span class="mini-badge mb-SS">SS</span><span class="choice-sub" data-testers="SS">เลือกสายก่อนเพื่อดูผู้ทดสอบ</span></label>
-                <label class="choice"><input type="radio" name="tier" value="S"><span class="mini-badge mb-S">S</span><span class="choice-sub" data-testers="S">เลือกสายก่อนเพื่อดูผู้ทดสอบ</span></label>
+                <label class="choice"><input type="radio" name="tier" value="God" id="f-tier"><span class="mini-badge mb-God">God</span></label>
+                <label class="choice"><input type="radio" name="tier" value="SSS"><span class="mini-badge mb-SSS">SSS</span></label>
+                <label class="choice"><input type="radio" name="tier" value="SS"><span class="mini-badge mb-SS">SS</span></label>
+                <label class="choice"><input type="radio" name="tier" value="S"><span class="mini-badge mb-S">S</span></label>
               </div>
               <p class="err" id="e-tier" hidden></p>
             </fieldset>
@@ -255,7 +255,6 @@ a{color:inherit}
               <dt>เลเวล</dt><dd id="sum-level">-</dd>
               <dt>แรงค์</dt><dd id="sum-rank">-</dd>
               <dt>สาย / ระดับ</dt><dd id="sum-track">-</dd>
-              <dt>ผู้ทดสอบ</dt><dd id="sum-testers">-</dd>
               <dt>รอบทดสอบ / เวลาสะดวก</dt><dd id="sum-avail">-</dd>
             </dl>
 
@@ -300,10 +299,6 @@ a{color:inherit}
   const TRACKS = ["LEAGUE", "HIGHLIGHTS"];
   const TIERS = ["God", "SSS", "SS", "S"];
   const TRACK_LABEL = { LEAGUE: "TIER LEAGUE", HIGHLIGHTS: "TIER HIGHLIGHTS" };
-  const TIER_TABLE = {
-    LEAGUE: { God: ["ฟลุ๊ค"], SSS: ["กัน"], SS: ["ปาย", "น้อต"], S: ["ปั้น", "โต้", "เกล้า"] },
-    HIGHLIGHTS: { God: ["เกล้า"], SSS: ["กัน", "น้อต"], SS: ["ฟลุ๊ค", "ปั้น"], S: ["โต้", "ปาย"] },
-  };
   const RANKS = ["Diamond 1", "Diamond 2", "Diamond 3", "Diamond 4", "Heroic", "Master", "Grandmaster"];
   const AVAIL = { weekday_evening: "วันธรรมดา ช่วงเย็น", weekday_night: "วันธรรมดา ช่วงดึก", weekend: "เสาร์–อาทิตย์", anytime: "ได้ทุกช่วงเวลา" };
   const STEP_FIELDS = [
@@ -462,24 +457,13 @@ a{color:inherit}
     $$(".choice").forEach((c) => c.classList.toggle("is-on", c.querySelector("input").checked));
   }
 
-  function updateTesters() {
-    const track = readForm().track;
-    const table = TRACKS.includes(track) ? TIER_TABLE[track] : null;
-    $$("[data-testers]").forEach((el) => {
-      const names = table ? table[el.dataset.testers] : null;
-      el.textContent = names ? "ผู้ทดสอบ: " + names.join(", ") : "เลือกสายก่อนเพื่อดูผู้ทดสอบ";
-    });
-  }
-
   function renderSummary() {
     const d = readForm();
-    const testers = TRACKS.includes(d.track) && TIERS.includes(d.tier) ? TIER_TABLE[d.track][d.tier].join(", ") : "-";
     $("#sum-ign").textContent = d.ign.trim() || "-";
     $("#sum-uid").textContent = d.uid || "-";
     $("#sum-level").textContent = d.level || "-";
     $("#sum-rank").textContent = `BR ${d.rankBR || "-"} • CS ${d.rankCS || "-"}`;
     $("#sum-track").textContent = `${TRACK_LABEL[d.track] || "-"} • ${d.tier || "-"}`;
-    $("#sum-testers").textContent = testers;
     const sl = slotMode ? slots.find((x) => x.id === d.slotId) : null;
     $("#sum-avail").textContent = sl ? fmtSlot(sl.start) : d.preferredAt ? fmtSlot(d.preferredAt) : "-";
   }
@@ -754,7 +738,7 @@ a{color:inherit}
       return;
     }
     if (t.name === "rankBR" || t.name === "rankCS") setError(t.name, RULES[t.name](t.value));
-    if (t.type === "radio") { setError(t.name, ""); updateChoices(); updateTesters(); }
+    if (t.type === "radio") { setError(t.name, ""); updateChoices(); }
     if (t.name === "consent") setError("consent", "");
     updateQual();
     saveDraft();
@@ -779,7 +763,6 @@ a{color:inherit}
   loadDraft();
   loadSlots();
   updateChoices();
-  updateTesters();
   updateQual();
   goTo(0, false);
 })();

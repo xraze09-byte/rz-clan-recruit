@@ -18,7 +18,7 @@ export const SCHEMA = [
     rank_cs       text        NOT NULL,
     track         text        NOT NULL CHECK (track IN ('LEAGUE', 'HIGHLIGHTS')),
     tier          text        NOT NULL CHECK (tier IN ('God', 'SSS', 'SS', 'S')),
-    testers       text[]      NOT NULL DEFAULT '{}',
+    tier_admin    text        CHECK (tier_admin IN ('God', 'SSS', 'SS', 'S')),
     instagram     text        NOT NULL DEFAULT '',
     messenger     text        NOT NULL DEFAULT '',
     availability  text        NOT NULL DEFAULT '',
@@ -39,6 +39,12 @@ export const SCHEMA = [
     END IF;
   END $$`,
   `ALTER TABLE applications ADD COLUMN IF NOT EXISTS preferred_at timestamptz`,
+  `DO $$ BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='applications' AND column_name='testers') THEN
+      ALTER TABLE applications ALTER COLUMN testers DROP NOT NULL;
+    END IF;
+  END $$`,
+  `ALTER TABLE applications ADD COLUMN IF NOT EXISTS tier_admin text CHECK (tier_admin IN ('God', 'SSS', 'SS', 'S'))`,
   `CREATE INDEX IF NOT EXISTS applications_created_idx ON applications (created_at DESC)`,
   `CREATE INDEX IF NOT EXISTS applications_status_idx  ON applications (status)`,
   `CREATE INDEX IF NOT EXISTS applications_slot_idx    ON applications (slot_id) WHERE slot_id IS NOT NULL`,
